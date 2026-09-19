@@ -78,6 +78,7 @@ export default function Hero() {
           {/* Headline */}
           <div className="mt-6 max-w-3xl">
             <BlurText
+              as="h1"
               text="Crafted Digital Experiences Built to Outlast Trends"
               delay={300}
               className="font-heading text-6xl italic leading-[0.8] tracking-[-4px] text-white md:text-7xl lg:text-[5.5rem]"
