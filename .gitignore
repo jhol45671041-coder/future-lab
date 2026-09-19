@@ -1,0 +1,8 @@
+# Dependencies and build tooling — never commit
+node_modules/
+.npm/
+package-lock.json
+
+# Local scratch / QA output
+*.log
+.DS_Store
