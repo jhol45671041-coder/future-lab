@@ -9,11 +9,37 @@ Open `index.html` and it works.
 
 ---
 
+## Free at every level — no cost, ever
+
+The whole point is that nothing is gated. There is no signup, no email, no ads, no
+tracking, no paid tier, no "premium" ideas and no unlock codes. Every playbook,
+calculator, flyer and printable is open to every kid at every level, and it keeps
+working with no internet connection.
+
+Businesses are grouped into three **levels** — not paywalls:
+
+| Level | Name | To start | What it means |
+|---|---|---|---|
+| **1** | 🌱 Starter | **No money needed** | Hands, a bucket, and a neighbour who needs help. 9 ideas, 5 of them $0 to launch. |
+| **2** | 🧰 Builder | **A small kit, bought once** | $5–30 of gear that pays for itself on job one or two. 22 ideas, 10 of them $0 to launch. |
+| **3** | 🚀 Pro | **Real gear or a laptop you already have** | Websites, edited video, party packages, market stalls. 4 ideas, 2 of them $0 to launch. |
+
+The numbers are counted from `data.js` at runtime, so they can never drift out of
+date. 17 of the 35 ideas need **$0 to start** — press **“$0 to start only”** in the
+filter bar to see just those, at any level. The promise text itself lives in
+`window.FREE_PROMISE`, so there is one place to change it.
+
+Cost to run the site: **$0**. It is static files — no server, no database, no API
+keys, no build step, no accounts, and it works from a USB stick or straight off the
+file system.
+
+---
+
 ## What's inside
 
 | Page | What it does |
 |---|---|
-| **Find an idea** | Two-question matcher (age + work style), search, filters, sort, and 35 idea cards. Saved ideas persist. |
+| **Find an idea** | Two-question matcher (age + work style), search, filters (category, work style, age, level, **$0 to start**), sort, a free-at-every-level ladder, and 35 idea cards. Saved ideas persist. |
 | **Idea playbook** (slide-over) | For every idea: why it works, a first-week plan, gear, the sales script, safety rules, and how to charge more. |
 | **My plan** | Name generator, a price calculator that warns you when you're under- or over-charging, money split, and a printable one-page plan. |
 | **Flyer** | Live flyer builder that prints a real door-hanger. Auto-fills from your plan. |
@@ -76,8 +102,10 @@ node tests/audit-interpolations.js   # fails if user-typed text reaches innerHTM
 ```
 
 `tests/smoke.js` loads `index.html` in jsdom, runs the real app, and drives the
-matcher, filters, drawer, pricing calculator, flyer, earnings log, persistence,
-and print payloads — then reloads the page with the same `localStorage` to prove
+matcher, filters (including the level ladder and the **$0 to start** switch), the
+drawer, pricing calculator, flyer, earnings log, persistence, and print payloads.
+It also asserts the free promise is on the page, that every counter matches the
+data, and that nothing is locked or premium — then reloads the page with the same `localStorage` to prove
 state survives. It also fires hostile input at every text field and asserts that
 nothing becomes live markup.
 
@@ -89,7 +117,8 @@ nothing becomes live markup.
 index.html                  single page; sections are routers, not reloads
 assets/css/fonts.css        self-hosted Baloo 2 + Nunito (SIL OFL, see assets/fonts/)
 assets/css/styles.css       design system: sticker-book / neo-brutalist
-assets/js/data.js           ALL content: 35 ideas, categories, safety rules, checklists
+assets/js/data.js           ALL content: 35 ideas, 3 levels, the free promise,
+                            categories, safety rules, checklists
 assets/js/app.js            state, router, matcher, calculator, flyer, tracker, print
 assets/img/hero.png         hero illustration
 tests/                      jsdom smoke suite + security audit

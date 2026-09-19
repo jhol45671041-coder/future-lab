@@ -141,6 +141,98 @@ a  { color: var(--grape); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .chip small { font-family: var(--font-body); font-weight: 600; opacity: .75; }
 
+/* ---------------- FREE FOREVER ---------------- */
+/* The promise strip, the level ladder and the $0 counters. Deliberately loud:
+   "no cost" is the product, not small print. */
+.free-strip {
+  background: var(--ink); color: var(--paper);
+  border-bottom: 3px solid var(--line); padding: .7rem 0;
+}
+.free-strip-inner { display: flex; align-items: center; gap: .9rem; flex-wrap: wrap; }
+.free-strip p { margin: 0; font-size: .92rem; font-weight: 600; color: rgba(255,248,239,.85); flex: 1 1 340px; }
+.free-strip p strong { color: var(--paper); }
+.free-strip-link {
+  font-family: var(--font-display); font-weight: 700; font-size: .88rem;
+  color: var(--ink); background: var(--sun); border: 2.5px solid var(--line);
+  border-radius: 999px; padding: .35rem .85rem; text-decoration: none; box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+.free-strip-link:hover { transform: translate(-1px,-1px); }
+.free-pill {
+  font-family: var(--font-display); font-weight: 800; font-size: .82rem;
+  text-transform: uppercase; letter-spacing: .1em;
+  background: var(--mint); color: #fff; border: 2.5px solid var(--line);
+  border-radius: 999px; padding: .3rem .8rem; box-shadow: var(--shadow-sm); white-space: nowrap;
+}
+
+.free-line {
+  display: inline-flex; align-items: center; gap: .5rem; margin: 1.1rem 0 0;
+  font-weight: 700; font-size: .92rem; color: var(--ink);
+  background: rgba(18,184,134,.12); border: 2px dashed rgba(18,184,134,.75);
+  border-radius: 999px; padding: .35rem .9rem;
+}
+.free-line-tick { color: var(--mint); font-weight: 900; }
+
+.free-levels { padding-top: 1.4rem; }
+.free-stamp {
+  font-family: var(--font-display); font-weight: 800; font-size: .9rem;
+  background: var(--paper-2); border: 3px solid var(--line); border-radius: 999px;
+  padding: .45rem 1rem; box-shadow: var(--shadow-sm); transform: rotate(-2deg); white-space: nowrap;
+}
+.level-ladder { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; }
+.level-card {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--paper-2); border: 3px solid var(--line); border-radius: var(--r);
+  box-shadow: var(--shadow); padding: 1.1rem; cursor: pointer;
+  border-top: 12px solid var(--tint, var(--coral));
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.level-card:hover { transform: translate(-2px,-3px); box-shadow: var(--shadow-lg); }
+.level-card.is-active { background: #fffdf5; box-shadow: var(--shadow-lg); transform: translate(-2px,-3px); }
+.level-card.is-active::after {
+  content: "SHOWING"; position: absolute; top: -13px; right: 14px;
+  font-family: var(--font-display); font-weight: 800; font-size: .68rem; letter-spacing: .12em;
+  background: var(--ink); color: var(--paper); border-radius: 999px; padding: .2rem .6rem;
+}
+.level-top { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin-bottom: .5rem; }
+.level-emoji {
+  font-size: 1.4rem; width: 44px; height: 44px; display: grid; place-items: center;
+  border: 2.5px solid var(--line); border-radius: 14px; background: var(--tint, var(--cream));
+}
+.level-free {
+  font-family: var(--font-display); font-weight: 800; font-size: .72rem;
+  text-transform: uppercase; letter-spacing: .06em;
+  background: var(--paper); border: 2px solid var(--line); border-radius: 999px; padding: .2rem .6rem;
+}
+.level-card h3 { margin: 0 0 .1rem; font-size: 1.3rem; }
+.level-cost { font-weight: 800; font-size: .86rem; color: var(--ink-soft); margin: 0 0 .5rem; text-transform: uppercase; letter-spacing: .05em; }
+.level-blurb { font-size: .92rem; font-weight: 600; color: #2d2a3a; margin: 0 0 .7rem; }
+.level-list { list-style: none; padding: 0; margin: 0 0 .9rem; display: grid; gap: .3rem; }
+.level-list li { font-size: .86rem; font-weight: 700; color: var(--ink-soft); padding-left: 1.3rem; position: relative; }
+.level-list li::before { content: "✓"; position: absolute; left: 0; color: var(--tint, var(--mint)); font-weight: 900; }
+.level-meta {
+  display: flex; gap: .8rem; flex-wrap: wrap; font-size: .8rem; font-weight: 700; color: var(--ink-soft);
+  border-top: 2px dashed rgba(25,24,35,.18); padding-top: .6rem; margin-bottom: .8rem;
+}
+.level-meta b { font-family: var(--font-display); font-size: 1rem; color: var(--ink); }
+.level-btn { width: 100%; margin-top: auto; }
+
+.free-facts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .9rem; margin: 1.3rem 0 0;
+}
+.free-fact {
+  background: var(--paper-2); border: 3px solid var(--line); border-radius: var(--r);
+  box-shadow: var(--shadow-sm); padding: .8rem .9rem;
+}
+.free-fact b { display: block; font-family: var(--font-display); font-size: 1.6rem; line-height: 1; }
+.free-fact span { font-size: .78rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; }
+.free-note {
+  margin: .9rem 0 0; font-size: .84rem; font-weight: 700; color: var(--ink-soft);
+  background: rgba(18,184,134,.1); border: 2px dashed rgba(18,184,134,.6); border-radius: var(--r-sm); padding: .6rem .8rem;
+}
+.footer-free { color: var(--sun) !important; font-weight: 700; }
+
 /* ---------------- HERO ---------------- */
 .hero { padding: 3rem 0 2rem; position: relative; overflow: hidden; }
 .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 2.5rem; align-items: center; }
@@ -248,6 +340,15 @@ select.sel {
 .badge--mode { background: var(--cream); }
 .badge--match { background: var(--sun); }
 .badge--start { background: #f1f0f5; }
+/* Level badge: dark ink on a light wash of the level colour, so all three
+   levels stay readable and none of them looks "better" than another. */
+.badge--level {
+  background: var(--cream); color: var(--ink);
+  box-shadow: inset 4px 0 0 var(--tint, var(--coral));
+}
+@supports (background: color-mix(in srgb, red 20%, white)) {
+  .badge--level { background: color-mix(in srgb, var(--tint, var(--coral)) 20%, #fff); }
+}
 .badge--mismatch { background: #e9e8ef; color: var(--ink-soft); }
 .card-foot { margin-top: auto; display: flex; gap: .5rem; align-items: center; }
 .card-foot .btn { flex: 1; }
@@ -448,7 +549,8 @@ table.jobs td.num { font-family: var(--font-display); font-weight: 800; }
   body { background: #fff; }
   /* Chrome: nothing that is screen furniture gets printed */
   .site-header, .site-footer, .toolbar, .no-print, .drawer, .drawer-backdrop,
-  .toast, .quiz, .hero, .card-foot, .icon-btn, #backdrop { display: none !important; }
+  .toast, .quiz, .hero, .card-foot, .icon-btn, #backdrop,
+  .free-strip, .free-levels, .free-note { display: none !important; }
   /* A plain Ctrl+P prints whatever page you are looking at… */
   .page { display: none !important; padding: 0; }
   .page.active { display: block !important; }

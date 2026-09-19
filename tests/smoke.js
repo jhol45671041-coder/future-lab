@@ -53,6 +53,45 @@ const nav = async hash => { window.location.hash = hash; window.dispatchEvent(ne
   t("work-style filter has 6 options", qa("#f-mode option").length === 6);
   t("hero stat = best job price", /^\$\d+$/.test(q("#stat-top").textContent), q("#stat-top").textContent);
 
+  console.log("\n— free at every level —");
+  const freeIdeas = window.IDEAS.filter(i => !i.startup).length;
+  t("promise text comes from data.js", q("#free-promise").textContent.includes(window.FREE_PROMISE.headline),
+    q("#free-promise").textContent.slice(0, 70));
+  t("promise spells out what it is not", /no signup/i.test(window.FREE_PROMISE.body) && /no paid tier/i.test(window.FREE_PROMISE.body),
+    window.FREE_PROMISE.body.slice(0, 70));
+  t("strip is on screen and mentions no cost", /no cost/i.test(q("#free-promise").textContent));
+  t("3 levels defined, all free to reach", window.LEVELS.length === 3 && window.LEVELS.every(l => l.id && l.name && l.cost));
+  t("level ladder renders 3 cards", qa("#level-ladder .level-card").length === 3, "got " + qa("#level-ladder .level-card").length);
+  t("every level card is stamped free + unlocked", qa("#level-ladder .level-free").every(el => /free/i.test(el.textContent)));
+  t("nothing on the page is locked, gated or premium", qa("[data-locked], .locked, .is-locked, [data-premium], [data-upgrade]").length === 0);
+  t("hero counts the $0-start ideas", q("#stat-free").textContent === String(freeIdeas), q("#stat-free").textContent + " vs " + freeIdeas);
+  t("every $0 counter on the page matches the data", qa("[data-free='count-zero']").every(el => el.textContent === String(freeIdeas)));
+  t("every playbook counter matches the data", qa("[data-free='count-total']").every(el => el.textContent === String(window.IDEAS.length)));
+  t("level filter offers all 3 levels", qa("#f-level option").length === 4, "got " + qa("#f-level option").length);
+  t("cards carry a level badge", qa("#grid .badge--level").length === 35, "got " + qa("#grid .badge--level").length);
+
+  q("#f-level").value = "1"; fire(q("#f-level"), "change");
+  const lvl1 = window.IDEAS.filter(i => i.level === 1).length;
+  t("level 1 shows only starter jobs", qa("#grid .card").length === lvl1, "got " + qa("#grid .card").length + " vs " + lvl1);
+  t("all shown cards are level 1", qa("#grid .badge--level").every(b => /Level 1/.test(b.textContent)));
+  click(qa("#level-ladder .level-card")[2]);
+  const lvl3 = window.IDEAS.filter(i => i.level === 3).length;
+  t("clicking a level card filters the grid", qa("#grid .card").length === lvl3 && q("#f-level").value === "3",
+    qa("#grid .card").length + " cards, select=" + q("#f-level").value);
+  t("active level card is marked", qa("#level-ladder .level-card")[2].classList.contains("is-active"));
+  click(q("#btn-free-only"));
+  t("$0 switch hides jobs with a startup cost", qa("#grid .card").every(c => /No startup cost/.test(c.textContent)) && qa("#grid .card").length === 2,
+    "got " + qa("#grid .card").length);
+  q("#f-level").value = "all"; fire(q("#f-level"), "change");
+  t("$0 switch alone = every free-to-start job", qa("#grid .card").length === freeIdeas, "got " + qa("#grid .card").length);
+  t("$0 switch is announced", q("#btn-free-only").getAttribute("aria-pressed") === "true");
+  t("result count flags the free filter", /\$0 to start/.test(q("#result-count").textContent), q("#result-count").textContent);
+  click(q("#btn-free-only"));
+  t("switching it off restores everything", qa("#grid .card").length === 35 && q("#btn-free-only").getAttribute("aria-pressed") === "false");
+  click(q("#btn-clear-filters"));
+  t("reset clears the level filter too", qa("#grid .card").length === 35 && q("#f-level").value === "all");
+  t("footer promises there is no paid version", /no paid version/i.test(q(".site-footer").textContent));
+
   console.log("\n— quiz —");
   click(qa("#age-chips .chip")[1]);   // 11-12
   click(qa("#vibe-chips .chip")[1]);  // animals & kids
@@ -108,7 +147,8 @@ const nav = async hash => { window.location.hash = hash; window.dispatchEvent(ne
   t("drawer unhidden", q("#drawer").hidden === false);
   await wait(40);
   t("drawer animates open", q("#drawer").classList.contains("open") && q("#backdrop").classList.contains("open"));
-  t("4 money cells", qa("#drawer-money .money-cell").length === 4);
+  t("5 money cells incl. level", qa("#drawer-money .money-cell").length === 5, "got " + qa("#drawer-money .money-cell").length);
+  t("drawer shows the level and that it is free", /Level \d/.test(q("#drawer-money").textContent) && /free/i.test(q("#drawer-money").textContent), q("#drawer-money").textContent.slice(0, 60));
   t("title filled", q("#drawer-title").textContent.length > 2, q("#drawer-title").textContent);
   const tabs = qa("#drawer-tabs button");
   tabs[1].click(); t("gear tab lists gear", qa("#drawer-body .list--check li").length > 2, String(qa("#drawer-body .list--check li").length));

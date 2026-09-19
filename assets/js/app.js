@@ -11,7 +11,7 @@
   /* ---------------- state ---------------- */
   const state = {
     answers: { age: null, vibe: null },
-    filters: { q: "", cat: "all", mode: "all", age: "all", sort: "match" },
+    filters: { q: "", cat: "all", mode: "all", age: "all", level: "all", free: false, sort: "match" },
     saved: [],
     ideaId: null,
     plan: { name: "", owner: "" },
@@ -59,6 +59,12 @@
   /* "an 8-year-old" reads right, "a 11-year-old" does not. */
   const art = band => (/^(8|11|18)/.test(band.label) ? "an " : "a ") + band.label;
   const vibeOf = () => VIBES.find(v => v.id === state.answers.vibe) || null;
+  const levelOf = id => LEVELS.find(l => l.id === +id) || LEVELS[0];
+  const levelName = l => "Level " + l.id + " · " + l.name;
+  /* "Free to start" is the whole point — count it from the data, never hard-code it. */
+  const freeCount = () => IDEAS.filter(i => !i.startup).length;
+  const freeCountFor = lvl => IDEAS.filter(i => i.level === +lvl && !i.startup).length;
+  const countFor = lvl => IDEAS.filter(i => i.level === +lvl).length;
 
   function toast(msg) {
     const t = $("#toast");
@@ -178,6 +184,59 @@
     else el.textContent = "Pick both answers to get a personal shortlist.";
   }
 
+  /* ---------------- free at every level ---------------- */
+  /* Nothing on this site is locked, gated, or sold. These two renders keep the
+     promise visible and keep every counter growing straight out of data.js,
+     so a new idea updates the numbers everywhere automatically. */
+  function renderFreePromise() {
+    const F = FREE_PROMISE;
+    const strip = $("#free-promise");
+    if (strip && F) {
+      const set = (key, text, sel) => { const el = $(sel || ("[data-free='" + key + "']"), strip); if (el) el.textContent = text; };
+      set("badge", F.badge);
+      set("headline", F.headline);
+      set("body", F.body);
+    }
+    $$("[data-free='count-zero']").forEach(el => { el.textContent = freeCount(); });
+    $$("[data-free='count-total']").forEach(el => { el.textContent = IDEAS.length; });
+    const stat = $("#stat-free");
+    if (stat) stat.textContent = freeCount();
+  }
+
+  function renderLevelLadder() {
+    const host = $("#level-ladder");
+    if (!host) return;
+    const chosen = String(state.filters.level);
+    host.innerHTML = LEVELS.map(l => {
+      const active = chosen === String(l.id);
+      return `<article class="level-card${active ? " is-active" : ""}" data-level="${l.id}" style="--tint:${l.tint}">
+        <div class="level-top">
+          <span class="level-emoji" aria-hidden="true">${l.emoji}</span>
+          <span class="level-free">✓ Free · unlocked</span>
+        </div>
+        <h3>${esc(levelName(l))}</h3>
+        <p class="level-cost">${esc(l.cost)}</p>
+        <p class="level-blurb">${esc(l.blurb)}</p>
+        <ul class="level-list">
+          <li>${esc(l.unlocks)}</li>
+          <li>${esc(l.gearLove)}</li>
+        </ul>
+        <div class="level-meta">
+          <span><b>${countFor(l.id)}</b> ideas</span>
+          <span><b>${freeCountFor(l.id)}</b> at $0 to start</span>
+        </div>
+        <button class="btn btn--sm level-btn" data-level-btn="${l.id}">${active ? "Showing " + esc(levelName(l)) : "Show " + esc(levelName(l)) + " ideas →"}</button>
+      </article>`;
+    }).join("");
+  }
+
+  function toggleLevel(id) {
+    state.filters.level = String(state.filters.level) === String(id) ? "all" : String(id);
+    renderFilters(); renderGrid(); save();
+    const on = state.filters.level !== "all";
+    toast(on ? levelName(levelOf(state.filters.level)) + " — every idea here is free ✓" : "Showing every level");
+  }
+
   /* ---------------- filters ---------------- */
   function renderFilters() {
     $("#f-cat").innerHTML = `<option value="all">All categories</option>` +
@@ -186,27 +245,46 @@
       VIBES.map(v => `<option value="${v.id}">${v.emoji} ${v.label}</option>`).join("");
     $("#f-age").innerHTML = `<option value="all">Any age</option>` +
       AGE_BANDS.map(b => `<option value="${b.id}">${b.label} years old</option>`).join("");
+    $("#f-level").innerHTML = `<option value="all">All levels</option>` +
+      LEVELS.map(l => `<option value="${l.id}">${l.emoji} ${levelName(l)}</option>`).join("");
     $("#f-cat").value = state.filters.cat;
     $("#f-mode").value = state.filters.mode;
     $("#f-age").value = state.filters.age;
+    $("#f-level").value = state.filters.level;
     $("#f-sort").value = state.filters.sort;
     $("#q").value = state.filters.q;
 
     const set = (k, v) => { state.filters[k] = v; save(); renderGrid(); };
-    $("#f-cat").onchange  = e => set("cat", e.target.value);
-    $("#f-mode").onchange = e => set("mode", e.target.value);
-    $("#f-age").onchange  = e => set("age", e.target.value);
-    $("#f-sort").onchange = e => set("sort", e.target.value);
+    $("#f-cat").onchange   = e => set("cat", e.target.value);
+    $("#f-mode").onchange  = e => set("mode", e.target.value);
+    $("#f-age").onchange   = e => set("age", e.target.value);
+    $("#f-level").onchange = e => set("level", e.target.value);
+    $("#f-sort").onchange  = e => set("sort", e.target.value);
+    const freeBtn = $("#btn-free-only");
+    if (freeBtn) {
+      freeBtn.setAttribute("aria-pressed", state.filters.free ? "true" : "false");
+      freeBtn.onclick = () => {
+        state.filters.free = !state.filters.free;
+        freeBtn.setAttribute("aria-pressed", state.filters.free ? "true" : "false");
+        renderGrid(); save();
+        toast(state.filters.free
+          ? freeCount() + " ideas need $0 to start — all levels stay free"
+          : "Showing every idea again");
+      };
+    }
     let qt = null;
     $("#q").oninput = e => {
       clearTimeout(qt);
       const v = e.target.value;
       qt = setTimeout(() => set("q", v.trim().toLowerCase()), 160);
     };
-    $("#btn-clear-filters").onclick = () => {
-      state.filters = { q: "", cat: "all", mode: "all", age: "all", sort: "match" };
-      renderFilters(); renderGrid(); save();
-    };
+    $("#btn-clear-filters").onclick = clearFilters;
+  }
+
+  /* One reset path, so a new filter can never be forgotten in one of the copies. */
+  function clearFilters() {
+    state.filters = { q: "", cat: "all", mode: "all", age: "all", level: "all", free: false, sort: "match" };
+    renderFilters(); renderGrid(); save();
   }
 
   /* ---------------- grid ---------------- */
@@ -216,6 +294,8 @@
       if (f.cat !== "all" && i.cat !== f.cat) return false;
       if (f.mode !== "all" && i.mode !== f.mode) return false;
       if (f.age !== "all" && !overlapsAge(i)) return false;
+      if (f.level !== "all" && String(i.level) !== String(f.level)) return false;
+      if (f.free && i.startup) return false;                 /* the "$0 to start only" switch */
       if (f.q) {
         const hay = (i.title + " " + i.tagline + " " + i.cat + " " + i.mode + " " + i.why.join(" ") + " " + i.gear.join(" ") + " " + i.steps.join(" ")).toLowerCase();
         if (hay.indexOf(f.q) === -1) return false;
@@ -250,6 +330,7 @@
         <span class="badge badge--pay">${i.price} / ${i.payUnit}</span>
         ${m && m.warn ? `<span class="badge badge--mismatch">Too old/young for this one yet</span>` : ""}
         ${m && !m.warn ? `<span class="badge badge--match">${m.pct}% match</span>` : ""}
+        <span class="badge badge--level" style="--tint:${levelOf(i.level).tint}">${levelName(levelOf(i.level))} · free</span>
         <span class="badge badge--start">${i.startup === 0 ? "No startup cost" : "Starts at $" + i.startup}</span>
       </div>
       <p class="card-body">${esc(i.tagline)}</p>
@@ -267,18 +348,22 @@
       ? list.map(cardHTML).join("")
       : `<div class="empty"><span class="big">🤔</span><h3>No ideas match that yet</h3><p>Try resetting the filters or searching a simpler word like “dog” or “yard”.</p><button class="btn" id="empty-reset">Reset filters</button></div>`;
     const er = $("#empty-reset");
-    if (er) er.onclick = () => { state.filters = { q: "", cat: "all", mode: "all", age: "all", sort: "match" }; renderFilters(); renderGrid(); save(); };
+    if (er) er.onclick = clearFilters;
 
-    $("#result-count").textContent = list.length + (list.length === 1 ? " idea" : " ideas");
+    $("#result-count").textContent = list.length + (list.length === 1 ? " idea" : " ideas") +
+      (state.filters.free ? " · $0 to start" : "");
     const a = ageBand(), v = vibeOf();
     $("#results-title").textContent = (a || v)
       ? `Ideas for ${a ? art(a) + " year old" : "you"}${v ? " who likes " + v.label.toLowerCase() : ""}`
       : `All ${IDEAS.length} ideas`;
-    $("#results-sub").textContent = (a || v)
-      ? `Sorted so the best fits come first. Expand any card for prices, gear, and the exact words to use.`
-      : `Browse everything, or answer the two questions above for a shortlist built around you.`;
+    $("#results-sub").textContent = state.filters.free
+      ? `Showing only the ${freeCount()} jobs that need $0 to start — every level stays free.`
+      : (a || v)
+        ? `Sorted so the best fits come first. Every level is free — open any card for prices, gear, and the exact words to use.`
+        : `Browse everything — all ${IDEAS.length} playbooks are free and unlocked, or answer the two questions above for a shortlist built around you.`;
     $("#stat-ideas").textContent = IDEAS.length;
     $("#stat-top").textContent = money(Math.max.apply(null, IDEAS.map(i => i.payHigh)));
+    renderLevelLadder();
   }
 
   /* ---------------- drawer ---------------- */
@@ -291,10 +376,11 @@
     $("#drawer-title").textContent = i.title;
     $("#drawer-tag").textContent = `${c.emoji} ${c.name} · ages ${i.ages[0]}–${i.ages[1]} · ${i.seasons}`;
     $("#drawer-money").innerHTML = `
+      <div class="money-cell"><span>Level</span><b>${levelOf(i.level).emoji} ${levelName(levelOf(i.level))}</b></div>
       <div class="money-cell"><span>Typical price</span><b>${i.price}</b></div>
       <div class="money-cell"><span>Per</span><b>${i.payUnit}</b></div>
       <div class="money-cell"><span>Time per job</span><b>${i.time}</b></div>
-      <div class="money-cell"><span>Startup cost</span><b>${i.startup === 0 ? "Free" : "$" + i.startup}</b></div>`;
+      <div class="money-cell"><span>Startup cost</span><b>${i.startup === 0 ? "$0 · free" : "$" + i.startup}</b></div>`;
     const tabs = $$("#drawer-tabs button");
     tabs.forEach(t => t.setAttribute("aria-selected", t.dataset.tab === "start" ? "true" : "false"));
     renderDrawerTab("start");
@@ -549,6 +635,7 @@
       <p style="font-family:var(--font-display);font-weight:800;font-size:1.5rem;margin-bottom:.2rem">${esc(name)}</p>
       <p class="card-tag" style="margin-bottom:.9rem">Run by ${esc(owner)} · ${c.emoji} ${c.name} · ${esc(i.title)}</p>
       <div class="badges">
+        <span class="badge badge--level" style="--tint:${levelOf(i.level).tint}">${levelName(levelOf(i.level))} · free</span>
         <span class="badge badge--age">Ages ${i.ages[0]}–${i.ages[1]}</span>
         <span class="badge badge--pay">${i.price} / ${i.payUnit}</span>
         <span class="badge badge--mode">${i.time} per job</span>
@@ -823,10 +910,15 @@
   /* ---------------- boot ---------------- */
   function boot() {
     load();
+    renderFreePromise();
     renderChips();
     updateQuizStatus();
     renderFilters();
     renderGrid();
+    $("#level-ladder").addEventListener("click", e => {
+      const card = e.target.closest("[data-level]");
+      if (card) toggleLevel(card.dataset.level);
+    });
     initPlan();
     renderPlan();
     /* Never let the print button produce a flyer full of placeholders: if the kid

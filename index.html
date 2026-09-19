@@ -30,6 +30,15 @@
   </div>
 </header>
 
+<!-- Every page, every level, no cost. Stated up front, never behind a login. -->
+<div class="free-strip no-print" id="free-promise" data-free="strip">
+  <div class="wrap free-strip-inner">
+    <span class="free-pill">🎉 <span data-free="badge">100% free</span></span>
+    <p><strong data-free="headline">Every level is free — no cost, ever.</strong> <span data-free="body">No signup, no account, no ads, no paid tier, no unlock codes. Every idea, plan, flyer, printable and calculator on this site is open to every kid at every level.</span></p>
+    <a class="free-strip-link" href="#free-levels">See the 3 levels ↓</a>
+  </div>
+</div>
+
 <main id="main">
 
   <!-- ================= FIND ================= -->
@@ -45,10 +54,11 @@
               <a class="btn btn--primary" href="#quiz">Find my business →</a>
               <a class="btn" href="#/safety">Read the safety rules first</a>
             </div>
+            <p class="free-line"><span class="free-line-tick" aria-hidden="true">✓</span> Free at every level — no signup, no ads, no cost, works offline.</p>
             <div class="hero-stats">
               <div class="hero-stat"><b id="stat-ideas">35</b><span>Business ideas</span></div>
               <div class="hero-stat"><b id="stat-top">$250</b><span>Best single job</span></div>
-              <div class="hero-stat"><b>$0</b><span>To get started</span></div>
+              <div class="hero-stat"><b id="stat-free">17</b><span>Need $0 to start</span></div>
             </div>
           </div>
           <div class="hero-art">
@@ -79,6 +89,25 @@
         </div>
       </div>
 
+      <!-- FREE AT EVERY LEVEL -->
+      <div class="section free-levels" id="free-levels">
+        <div class="section-head">
+          <div>
+            <h2>Free at every level</h2>
+            <p>Three sizes of business, <strong>all of them open</strong>. Nothing here is locked, tiered, or sold — the guide, the playbooks, the calculator, the flyer and every printable are free for every kid at every level.</p>
+          </div>
+          <span class="free-stamp" aria-hidden="true">🔓 No paywall</span>
+        </div>
+        <div class="level-ladder" id="level-ladder"></div>
+        <div class="free-facts">
+          <div class="free-fact"><b data-free="count-zero">17</b><span>ideas need $0 to start</span></div>
+          <div class="free-fact"><b data-free="count-total">35</b><span>playbooks, all unlocked</span></div>
+          <div class="free-fact"><b>$0</b><span>cost to use this site</span></div>
+          <div class="free-fact"><b>0</b><span>accounts required</span></div>
+        </div>
+        <p class="quiz-hint">Short on money? Hit <strong>“$0 to start only”</strong> in the filter bar to see just the jobs that need no cash upfront — there are <span data-free="count-zero">17</span> of them, spread across all three levels.</p>
+      </div>
+
       <!-- RESULTS -->
       <div class="section" id="results">
         <div class="section-head">
@@ -104,6 +133,8 @@
             <select class="sel" id="f-mode" aria-label="Filter by work style"></select>
             <span class="filter-label">Age</span>
             <select class="sel" id="f-age" aria-label="Filter by age"></select>
+            <span class="filter-label">Level</span>
+            <select class="sel" id="f-level" aria-label="Filter by level"></select>
             <span class="filter-label">Sort</span>
             <select class="sel" id="f-sort" aria-label="Sort ideas">
               <option value="match">Best match for me</option>
@@ -112,6 +143,7 @@
               <option value="cheap">Lowest startup cost</option>
               <option value="az">A–Z</option>
             </select>
+            <button class="chip chip--free" id="btn-free-only" aria-pressed="false" title="Only show jobs that cost nothing to start">💸 $0 to start only</button>
             <button class="btn btn--ghost btn--sm" id="btn-clear-filters">Reset filters</button>
           </div>
         </div>
@@ -357,6 +389,7 @@
       <button class="btn btn--primary" id="drawer-plan">Build my plan with this →</button>
       <button class="btn" id="drawer-save">☆ Save</button>
     </div>
+    <p class="free-note">✓ This playbook, the price calculator, the flyer and every printable are free at every level — no signup, no cost, no locked extras.</p>
   </div>
 </aside>
 
@@ -366,6 +399,7 @@
       <div>
         <h4>💸 Kid Hustle Lab</h4>
         <p>A free field guide for kids who want to earn their own money — and the parents who want them to learn how.</p>
+        <p class="footer-free">Free at every level · no signup · no ads · no paid tier · <span data-free="count-total">35</span> playbooks unlocked</p>
       </div>
       <div>
         <h4>The short version</h4>
@@ -386,7 +420,7 @@
         </ul>
       </div>
     </div>
-    <div class="footer-bottom">Built for first-time founders aged 8–17. Prices are typical US neighborhood ranges — adjust for your town.</div>
+    <div class="footer-bottom">Built for first-time founders aged 8–17. Always free at every level — there is no paid version, no premium level, and nothing to buy. Prices are typical US neighborhood ranges — adjust for your town.</div>
   </div>
 </footer>
 

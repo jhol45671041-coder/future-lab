@@ -30,6 +30,51 @@ window.AGE_BANDS = [
   { id: "15-17", label: "15–17", age: 16, note: "Run it like a company" }
 ];
 
+/* ------------------------------------------------------------
+   LEVELS — the three sizes of business, in the order a kid grows
+   through them. Every level is fully unlocked: the guide, the
+   playbooks, the calculator, the flyer and the printables are all
+   free, and the level-1 jobs need no money at all to launch.
+   Nothing on this site is locked, gated, or sold.
+   ------------------------------------------------------------ */
+window.LEVELS = [
+  {
+    id: 1, name: "Starter", emoji: "🌱", tint: "#12b886",
+    cost: "No money needed",
+    blurb: "Hands, a bucket, and a neighbor who needs help. Nothing to buy, nothing to risk.",
+    unlocks: "Earn your first $20 this week",
+    gearLove: "Uses the customer's tools or things you already own"
+  },
+  {
+    id: 2, name: "Builder", emoji: "🧰", tint: "#ff8a3d",
+    cost: "A small kit, bought once",
+    blurb: "A one-time kit of $5–30 that usually pays for itself on the first or second job.",
+    unlocks: "Repeat customers every week",
+    gearLove: "Buy the kit once, use it all season"
+  },
+  {
+    id: 3, name: "Pro", emoji: "🚀", tint: "#6c5ce7",
+    cost: "Real gear or a laptop you already have",
+    blurb: "Bigger jobs with bigger pay: websites, edited videos, party packages, market stalls.",
+    unlocks: "The highest-paying work on the site",
+    gearLove: "Often starts from a phone or laptop you already own"
+  }
+];
+
+/* The one promise that never changes. Printed in the hero, the footer,
+   and every playbook so nobody ever wonders if there is a catch. */
+window.FREE_PROMISE = {
+  badge: "100% free",
+  headline: "Every level is free — no cost, ever.",
+  body: "No signup, no account, no ads, no paid tier, no unlock codes. Every idea, plan, flyer, printable and calculator on this site is open to every kid at every level, and it keeps working with no internet.",
+  bullets: [
+    "No signup and no email — nothing to register",
+    "No ads, no tracking, no data leaves this device",
+    "No locked levels — every level is fully open",
+    "No cost paths: some jobs need $0 to start, and they're marked"
+  ]
+};
+
 window.IDEAS = [
   /* ---------------- HOME & YARD ---------------- */
   {
