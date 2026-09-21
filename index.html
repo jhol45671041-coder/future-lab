@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>J.A.R.V.I.S. // Unlimited Token Core</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="noise"></div>
+    <canvas id="hud-canvas"></canvas>
+
+    <div id="boot">
+      <div class="boot-reactor" aria-hidden="true">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="ring r3"></div>
+        <div class="core"></div>
+      </div>
+      <div class="boot-wordmark">J.A.R.V.I.S.</div>
+      <div class="boot-sub">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+      <pre id="boot-log" class="boot-log"></pre>
+      <div class="boot-bar"><div id="boot-fill"></div></div>
+      <div id="boot-pct">00%</div>
+    </div>
+
+    <div id="app" class="hidden" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <div class="mini-reactor" id="mini-reactor">
+            <span></span>
+          </div>
+          <div>
+            <div class="brand-name">J.A.R.V.I.S.</div>
+            <div class="brand-sub">MARK VII · NEURAL AGENT</div>
+          </div>
+        </div>
+        <div class="status-cluster">
+          <div class="chip ok">
+            <i></i><span>SYSTEMS NOMINAL</span>
+          </div>
+          <div class="chip gold" title="Token limiter disabled — unbounded context">
+            <i></i><span>∞ UNLIMITED TOKENS</span>
+          </div>
+          <div class="chip" id="link-chip">
+            <i></i><span id="link-label">NEURAL LINK: STANDBY</span>
+          </div>
+        </div>
+        <div class="clock-block">
+          <div id="clock">00:00:00</div>
+          <div id="date-line">INITIALISING</div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <aside class="panel left-panel">
+          <h2>SUBSYSTEMS</h2>
+          <ul class="sys-list" id="sys-list">
+            <li><span>Voice matrix</span><b id="sys-voice">STANDBY</b></li>
+            <li><span>Auditory input</span><b id="sys-mic">IDLE</b></li>
+            <li><span>Neural core</span><b id="sys-core">LOCAL</b></li>
+            <li><span>Memory banks</span><b>UNBOUNDED</b></li>
+            <li><span>Token limiter</span><b class="gold">DISABLED</b></li>
+            <li><span>Protocol</span><b>JARVIS v7</b></li>
+          </ul>
+          <h2>TELEMETRY</h2>
+          <div class="meters">
+            <div class="meter">
+              <label>CORE LOAD</label>
+              <div class="bar"><i id="m-cpu"></i></div>
+            </div>
+            <div class="meter">
+              <label>VOICE AMP</label>
+              <div class="bar"><i id="m-voice"></i></div>
+            </div>
+            <div class="meter">
+              <label>CONTEXT</label>
+              <div class="bar gold"><i id="m-ctx"></i></div>
+            </div>
+          </div>
+          <h2>QUICK DIRECTIVES</h2>
+          <div class="quick" id="quick">
+            <button data-q="Status report.">Status report</button>
+            <button data-q="What time is it?">Time</button>
+            <button data-q="Tell me a joke, Jarvis.">Wit protocol</button>
+            <button data-q="Who are you?">Identity</button>
+            <button data-q="What can you do?">Capabilities</button>
+            <button data-q="Give me a briefing on quantum computing.">Briefing</button>
+          </div>
+        </aside>
+
+        <section class="stage">
+          <div class="stage-frame">
+            <div class="corners"></div>
+            <div id="transcript" class="transcript" aria-live="polite"></div>
+          </div>
+          <div class="composer">
+            <button id="btn-mic" class="orb" title="Hold or click to speak" aria-label="Speak">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6">
+                <rect x="9" y="3" width="6" height="11" rx="3" />
+                <path d="M5 11a7 7 0 0 0 14 0" />
+                <path d="M12 18v3" />
+              </svg>
+            </button>
+            <div class="input-wrap">
+              <textarea
+                id="input"
+                rows="1"
+                placeholder="Address J.A.R.V.I.S. — no token limit, sir."
+                autocomplete="off"
+                spellcheck="true"
+              ></textarea>
+              <div class="input-meta">
+                <span id="char-count">0 · UNRESTRICTED</span>
+                <span>ENTER TO SEND · SHIFT+ENTER FOR LINE</span>
+              </div>
+            </div>
+            <button id="btn-send" class="send" aria-label="Send">ENGAGE</button>
+          </div>
+        </section>
+
+        <aside class="panel right-panel">
+          <h2>MEMORY</h2>
+          <div id="memory-view" class="memory-view">No persistent notes yet, sir.</div>
+          <h2>SESSION</h2>
+          <ul class="sys-list">
+            <li><span>Turns</span><b id="stat-turns">0</b></li>
+            <li><span>Spoken replies</span><b id="stat-spoken">0</b></li>
+            <li><span>Context chars</span><b id="stat-chars">0</b></li>
+            <li><span>Token cap</span><b class="gold">∞</b></li>
+          </ul>
+          <div class="side-actions">
+            <button id="btn-mute" class="ghost">VOICE OUTPUT: ON</button>
+            <button id="btn-clear" class="ghost">PURGE SESSION</button>
+            <button id="btn-settings" class="ghost">NEURAL LINK</button>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <div id="settings" class="modal hidden" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <h3>NEURAL LINK CONFIGURATION</h3>
+          <button id="btn-close-settings" class="ghost">CLOSE</button>
+        </div>
+        <p class="hint">
+          J.A.R.V.I.S. runs with an unbounded local core by default — no token meter, no cut-off.
+          Optionally attach a cloud model from this browser for broader reasoning. Keys stay in local storage only.
+        </p>
+        <label>Preferred engine</label>
+        <select id="cfg-engine">
+          <option value="auto">AUTO (cloud, then local core)</option>
+          <option value="cloud">CLOUD NEURAL LINK</option>
+          <option value="openai">CUSTOM OPENAI-COMPATIBLE API</option>
+          <option value="local">LOCAL CORE ONLY</option>
+        </select>
+        <label>How you wish to be addressed</label>
+        <input id="cfg-title" type="text" placeholder="sir" maxlength="40" />
+        <label>API base URL (optional)</label>
+        <input id="cfg-base" type="url" placeholder="https://api.groq.com/openai/v1" />
+        <label>API key (optional)</label>
+        <input id="cfg-key" type="password" placeholder="sk-…" autocomplete="off" />
+        <label>Model name</label>
+        <input id="cfg-model" type="text" placeholder="llama-3.3-70b-versatile / gpt-4o-mini / openai" />
+        <div class="modal-actions">
+          <button id="btn-save-settings" class="send">SAVE PROTOCOL</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
