@@ -2,9 +2,24 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+    />
+    <meta name="theme-color" content="#07050a" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="JARVIS" />
+    <meta
+      name="description"
+      content="J.A.R.V.I.S. unlimited-token agent. Chrome, Edge, Firefox, Safari, Opera, and mobile."
+    />
     <title>J.A.R.V.I.S. · Private Atelier</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -44,6 +59,17 @@
       <div id="boot-pct">00%</div>
     </div>
 
+    <div id="browser-bar" class="browser-bar hidden" hidden>
+      <span id="browser-bar-copy">For voice, open the atelier in its own browser tab.</span>
+      <a id="btn-full-browser" class="browser-bar-link" href="/" target="_blank" rel="noopener">Open in browser</a>
+    </div>
+
+    <noscript>
+      <div class="browser-bar">
+        J.A.R.V.I.S. needs JavaScript. Enable it in Chrome, Edge, Firefox, Safari, or Opera.
+      </div>
+    </noscript>
+
     <div id="app" class="hidden" hidden>
       <header class="masthead">
         <div class="brand">
@@ -63,6 +89,9 @@
             </div>
             <div class="chip" id="link-chip">
               <i></i><span id="link-label">Neural link · Standby</span>
+            </div>
+            <div class="chip" id="browser-chip">
+              <i></i><span id="browser-label">Browser</span>
             </div>
           </div>
           <div class="waveform" id="waveform" aria-hidden="true">
@@ -169,6 +198,9 @@
                 placeholder="Address J.A.R.V.I.S. — the evening is unmetered, sir."
                 autocomplete="off"
                 spellcheck="true"
+                enterkeyhint="send"
+                inputmode="text"
+                autocapitalize="sentences"
               ></textarea>
               <div class="input-meta">
                 <span id="char-count">0 · unrestricted</span>

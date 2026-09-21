@@ -17,10 +17,10 @@
   --panel: rgba(14, 10, 14, 0.62);
   --glass: rgba(22, 16, 20, 0.55);
   --line: rgba(201, 164, 92, 0.22);
-  --font-display: "Cinzel", serif;
-  --font-serif: "Cormorant Garamond", serif;
-  --font-ui: "Outfit", sans-serif;
-  --font-mono: "Share Tech Mono", monospace;
+  --font-display: "Cinzel", Palatino, "Palatino Linotype", "Times New Roman", serif;
+  --font-serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-ui: "Outfit", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Share Tech Mono", "SF Mono", ui-monospace, monospace;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
 }
@@ -34,11 +34,24 @@
 html,
 body {
   height: 100%;
+  height: 100dvh;
+  height: var(--vvh, 100dvh);
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-ui);
   overflow: hidden;
   color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -313,7 +326,9 @@ body.is-armed #cursor-glow {
   display: flex;
   flex-direction: column;
   padding: 28px 28px 20px;
+  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
   gap: 16px;
+  min-height: 0;
 }
 
 .masthead {
@@ -441,6 +456,7 @@ body.is-armed #cursor-glow {
   text-transform: uppercase;
   color: var(--ink-soft);
   background: rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -538,6 +554,8 @@ body.is-listening .waveform b {
 .cabinet {
   border: 1px solid var(--line);
   background: var(--panel);
+  -webkit-overflow-scrolling: touch;
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
   backdrop-filter: blur(18px) saturate(1.15);
   padding: 22px 18px;
   overflow: auto;
@@ -1005,6 +1023,7 @@ body.is-listening .waveform b {
   background: rgba(8, 6, 9, 0.72);
   display: flex;
   flex-direction: column;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   transition: border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
 }
@@ -1114,6 +1133,7 @@ body.is-listening .waveform b {
   display: grid;
   place-items: center;
   padding: 24px;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
@@ -1250,6 +1270,51 @@ body.is-speaking .stage-frame {
   }
 }
 
+.browser-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 18px;
+  padding-top: max(10px, env(safe-area-inset-top));
+  background: rgba(12, 8, 10, 0.92);
+  border-bottom: 1px solid var(--gold-line);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--ink-soft);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.browser-bar-link {
+  color: #1a120c;
+  background: var(--gold);
+  text-decoration: none;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  padding: 8px 14px;
+}
+
+body.has-browser-bar #boot {
+  top: 52px;
+}
+body.has-browser-bar #app {
+  padding-top: 64px;
+}
+
+.transcript {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 164, 92, 0.35) transparent;
+}
+
 @media (max-width: 1080px) {
   .atelier {
     grid-template-columns: 1fr;
@@ -1266,11 +1331,45 @@ body.is-speaking .stage-frame {
   }
   #app {
     padding: 18px 14px 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
   .transcript {
     padding: 22px 16px;
   }
   .msg {
     max-width: 92%;
+  }
+  .composer {
+    grid-template-columns: 52px 1fr 88px;
+  }
+  .orb {
+    width: 52px;
+    height: 52px;
+  }
+  .send {
+    min-width: 0;
+    padding: 0 10px;
+    letter-spacing: 0.14em;
+  }
+  .input-meta span:last-child {
+    display: none;
+  }
+  .ornament-frame {
+    display: none;
+  }
+}
+
+@media (hover: none) {
+  #cursor-glow {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }

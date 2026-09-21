@@ -37,3 +37,17 @@ Keys are stored in `localStorage` on your machine, never sent to this repo.
 ## Voice
 
 Chrome’s **Google UK English Male** is the closest built-in stand-in for Paul Bettany. Type if the browser blocks speech recognition — there is still no token cap on text.
+
+## Every browser
+
+Works in **Chrome, Edge, Firefox, Safari, Opera**, and on **iOS / Android**.
+
+| | Talk (TTS) | Listen (mic) | Type |
+| --- | --- | --- | --- |
+| Chrome / Edge | Yes | Yes | Yes |
+| Opera | Yes | Yes | Yes |
+| Safari (macOS) | Yes | Limited | Yes |
+| Safari (iOS) | Yes (after first tap) | Varies | Yes |
+| Firefox | Yes | No (browser limit) | Yes |
+
+If you are in a preview iframe, use **Open in browser** so the microphone is allowed. Add to Home Screen from the manifest on phones.

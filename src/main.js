@@ -3,14 +3,19 @@ import { createVoice } from "./voice.js";
 import { think, loadHistory, persistHistory, greeting } from "./agent.js";
 import { loadConfig, saveConfig } from "./llm.js";
 import { loadNotes } from "./tools.js";
+import { detectBrowser, unlockMedia, fitVisualViewport } from "./browser.js";
 
 const $ = (id) => document.getElementById(id);
 
 const hud = startHud($("hud-canvas"));
+const env = detectBrowser();
 let cfg = loadConfig();
 let history = loadHistory();
 let busy = false;
 let abort = null;
+let greetingQueued = null;
+
+fitVisualViewport();
 
 const glow = $("cursor-glow");
 window.addEventListener("pointermove", (e) => {
@@ -18,6 +23,19 @@ window.addEventListener("pointermove", (e) => {
   if (!glow) return;
   glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
 });
+
+window.addEventListener(
+  "pointerdown",
+  () => {
+    unlockMedia();
+    if (greetingQueued) {
+      const text = greetingQueued;
+      greetingQueued = null;
+      voice.speak(text);
+    }
+  },
+  { once: true, capture: true }
+);
 
 const voice = createVoice({
   onStart() {
@@ -72,7 +90,7 @@ function resizeInput() {
   el.style.height = "auto";
   el.style.height = Math.min(el.scrollHeight, 160) + "px";
   const n = el.value.length;
-    $("char-count").textContent = `${n.toLocaleString()} · unrestricted`;
+  $("char-count").textContent = `${n.toLocaleString()} · unrestricted`;
 }
 
 function hideEmpty() {
@@ -127,7 +145,7 @@ async function send(text) {
   busy = true;
   $("input").value = "";
   resizeInput();
-    addMsg("user", content, "Uplink");
+  addMsg("user", content, "Uplink");
   history.push({ role: "user", content, ts: Date.now() });
 
   document.body.classList.add("is-thinking");
@@ -193,11 +211,20 @@ function bindUi() {
     if (q) send(q);
   });
 
-  $("btn-mic").addEventListener("click", async () => {
+  $("btn-mic").addEventListener("pointerup", async (e) => {
+    e.preventDefault();
+    unlockMedia();
     if (!voice.canListen) {
+      const where = env.inIframe
+        ? "If you are inside a preview frame, open this page in its own tab — most browsers refuse the microphone there."
+        : env.isFirefox
+          ? "Firefox does not expose speech recognition yet. Chrome, Edge, or Safari on a recent iPhone will."
+          : env.isSafari
+            ? "Safari on desktop rarely allows dictation into the page. Chrome or Edge will, or you may type."
+            : "This browser has no speech-recognition API. You may still write at any length.";
       addMsg(
         "jarvis",
-        "This browser has not granted me auditory input, sir. Chrome or Edge will let me hear you. You may still write at any length.",
+        `I can hear you only where the browser allows it, sir. ${where} Typing remains unbounded.`,
         "Voice"
       );
       return;
@@ -254,8 +281,10 @@ function bindUi() {
     voice.speak(`Protocol updated. I shall address you as ${cfg.title}.`);
   });
 
-  $("sys-voice").textContent = "Online";
+  $("sys-voice").textContent = voice.canSpeak ? "Online" : "Unavailable";
   $("sys-mic").textContent = voice.canListen ? "Armed" : "Unavailable";
+  const bl = $("browser-label");
+  if (bl) bl.textContent = env.label;
 }
 
 function openSettings() {
@@ -308,11 +337,32 @@ async function boot() {
   const hello = history.length
     ? `Welcome back, ${cfg.title || "sir"}. Systems remain nominal. Token limiter is still disabled. I have our previous conversation on file.`
     : greeting(cfg);
-  addMsg("jarvis", hello, "BOOT");
+  addMsg("jarvis", hello, "Atelier");
   history.push({ role: "assistant", content: hello, ts: Date.now(), engine: "local" });
   persistHistory(history);
   stats();
-  await voice.speak(hello);
+  revealBrowserBar();
+  if (env.isIOS) greetingQueued = hello;
+  else await voice.speak(hello);
+}
+
+function revealBrowserBar() {
+  const bar = $("browser-bar");
+  const link = $("btn-full-browser");
+  const copy = $("browser-bar-copy");
+  if (!bar || !link) return;
+  link.href = window.location.href;
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const opened = window.open(window.location.href, "_blank", "noopener");
+    if (!opened) window.location.assign(window.location.href);
+  });
+  if (env.inIframe) {
+    if (copy) copy.textContent = "Voice needs a real browser tab. Open the atelier full-page.";
+    bar.hidden = false;
+    bar.classList.remove("hidden");
+    document.body.classList.add("has-browser-bar");
+  }
 }
 
 boot();
