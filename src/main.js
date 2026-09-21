@@ -1,6 +1,6 @@
 import { startHud } from "./hud-canvas.js";
 import { createVoice } from "./voice.js";
-import { think, greeting } from "./agent.js";
+import { think, greeting, loadHistory, persistHistory } from "./agent.js";
 import { loadConfig } from "./llm.js";
 import { detectBrowser, unlockMedia, fitVisualViewport } from "./browser.js";
 import { runCommand } from "./commands.js";
@@ -255,6 +255,7 @@ async function handleUtterance(text) {
       onEngine() {},
     });
     history.push({ role: "assistant", content: result.text, ts: Date.now() });
+    persistHistory(history);
     setReply(result.text);
     await voice.speak(result.text);
   } catch (err) {
