@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
+    />
+    <meta name="theme-color" content="#020308" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="JARVIS" />
+    <title>J.A.R.V.I.S. · Voice Control</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="hud-canvas"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <div id="boot">
+      <div class="boot-reactor">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="core"></div>
+      </div>
+      <div class="boot-wordmark">J.A.R.V.I.S.</div>
+      <div class="boot-sub">Voice control · Browser command</div>
+      <pre id="boot-log" class="boot-log"></pre>
+      <div class="boot-bar"><div id="boot-fill"></div></div>
+      <div id="boot-pct">00%</div>
+    </div>
+
+    <div id="app" class="hidden" hidden>
+      <header class="rail">
+        <div class="rail-brand">J.A.R.V.I.S.</div>
+        <div class="rail-mode" id="mode-pill">VOICE ONLY</div>
+        <div class="rail-status" id="status-pill">STANDBY</div>
+        <div class="rail-clock" id="clock">00:00:00</div>
+      </header>
+
+      <div id="browser-bar" class="browser-bar hidden" hidden>
+        <span id="browser-bar-copy">Voice needs a full browser tab.</span>
+        <a id="btn-full-browser" class="browser-bar-link" href="/" target="_blank" rel="noopener">Open in browser</a>
+      </div>
+
+      <main class="arena">
+        <button id="core" class="core-btn" type="button" aria-label="Start listening">
+          <span class="core-rings"></span>
+          <span class="core-gem"></span>
+        </button>
+        <p class="hint" id="arm-hint">Tap the core to authorise voice. Then just speak.</p>
+        <p class="heard" id="heard"></p>
+        <p class="reply" id="reply"></p>
+      </main>
+
+      <section id="dock" class="dock" hidden>
+        <div class="dock-bar">
+          <span id="dock-title">VIEW</span>
+          <span id="dock-url"></span>
+          <button id="btn-close-dock" type="button">Close</button>
+        </div>
+        <iframe id="web" title="Browser view" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"></iframe>
+        <video id="cam" playsinline autoplay muted hidden></video>
+        <div id="dock-card" class="dock-card" hidden></div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
