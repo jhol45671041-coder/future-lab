@@ -2,6 +2,17 @@
 
 Voice-only agent. No keyboard. He listens, speaks, and acts in the browser.
 
+## Run
+
+```bash
+npm install
+npm run dev
+```
+
+Open the printed URL (default `http://localhost:5173`) in **Chrome or Edge**.
+Skipping `npm install` is the usual cause of a blank app — the dev server exits
+with "vite: not found" and nothing loads.
+
 ## Use
 
 1. Open in **Chrome or Edge** (speech recognition).
