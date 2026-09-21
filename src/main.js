@@ -12,14 +12,23 @@ let history = loadHistory();
 let busy = false;
 let abort = null;
 
+const glow = $("cursor-glow");
+window.addEventListener("pointermove", (e) => {
+  document.body.classList.add("is-armed");
+  if (!glow) return;
+  glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+});
+
 const voice = createVoice({
   onStart() {
     $("mini-reactor").classList.add("speaking");
+    document.body.classList.add("is-speaking");
     hud.setAmp(0.85);
     $("m-voice").style.width = "88%";
   },
   onEnd() {
     $("mini-reactor").classList.remove("speaking");
+    document.body.classList.remove("is-speaking");
     hud.setAmp(0);
     $("m-voice").style.width = "12%";
     $("stat-spoken").textContent = String(voice.spoken);
@@ -63,16 +72,27 @@ function resizeInput() {
   el.style.height = "auto";
   el.style.height = Math.min(el.scrollHeight, 160) + "px";
   const n = el.value.length;
-  $("char-count").textContent = `${n.toLocaleString()} · UNRESTRICTED`;
+    $("char-count").textContent = `${n.toLocaleString()} · unrestricted`;
+}
+
+function hideEmpty() {
+  const el = $("empty-state");
+  if (el) el.style.display = "none";
+}
+
+function stamp() {
+  return new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
 function addMsg(role, text, extra = "") {
+  hideEmpty();
   const wrap = document.createElement("div");
   wrap.className = `msg ${role}`;
+  const who = role.includes("user") ? "You" : "J.A.R.V.I.S.";
   wrap.innerHTML = `
-    <div class="who">${role === "user" ? "OPERATOR" : "J.A.R.V.I.S."}</div>
+    <div class="who">${who}</div>
     <div class="bubble"></div>
-    <div class="meta">${extra}</div>
+    <div class="meta">${extra ? extra + " · " : ""}${stamp()}</div>
   `;
   wrap.querySelector(".bubble").textContent = text;
   $("transcript").appendChild(wrap);
@@ -81,8 +101,12 @@ function addMsg(role, text, extra = "") {
 }
 
 function renderHistory() {
-  $("transcript").innerHTML = "";
-  if (!history.length) return;
+  $("transcript").querySelectorAll(".msg").forEach((n) => n.remove());
+  if (!history.length) {
+    const el = $("empty-state");
+    if (el) el.style.display = "";
+    return;
+  }
   for (const m of history.slice(-80)) {
     addMsg(m.role === "user" ? "user" : "jarvis", m.content, m.engine ? m.engine : "");
   }
@@ -103,10 +127,11 @@ async function send(text) {
   busy = true;
   $("input").value = "";
   resizeInput();
-  addMsg("user", content, "UPLINK");
+    addMsg("user", content, "Uplink");
   history.push({ role: "user", content, ts: Date.now() });
 
-  const thinkMsg = addMsg("jarvis thinking", "Accessing neural matrices…", "THINKING");
+  document.body.classList.add("is-thinking");
+  const thinkMsg = addMsg("jarvis thinking", "A moment, while I consider that…", "Thinking");
   const bubble = thinkMsg.querySelector(".bubble");
   abort = new AbortController();
 
@@ -150,6 +175,7 @@ async function send(text) {
     busy = false;
     abort = null;
     hud.setAmp(0);
+    document.body.classList.remove("is-thinking");
   }
 }
 
@@ -171,36 +197,41 @@ function bindUi() {
     if (!voice.canListen) {
       addMsg(
         "jarvis",
-        "This browser has not granted me auditory input, sir. Chrome or Edge will let me hear you. You may still type at any length.",
-        "VOICE"
+        "This browser has not granted me auditory input, sir. Chrome or Edge will let me hear you. You may still write at any length.",
+        "Voice"
       );
       return;
     }
     $("btn-mic").classList.add("live");
-    $("sys-mic").textContent = "LISTENING";
+    document.body.classList.add("is-listening");
+    $("sys-mic").textContent = "Listening";
     try {
       const heard = await voice.listenOnce();
       $("btn-mic").classList.remove("live");
-      $("sys-mic").textContent = "IDLE";
+      document.body.classList.remove("is-listening");
+      $("sys-mic").textContent = "Idle";
       if (heard) await send(heard);
     } catch {
       $("btn-mic").classList.remove("live");
-      $("sys-mic").textContent = "DENIED";
+      document.body.classList.remove("is-listening");
+      $("sys-mic").textContent = "Denied";
     }
   });
 
   $("btn-mute").addEventListener("click", () => {
     voice.setMuted(!voice.muted);
-    $("btn-mute").textContent = voice.muted ? "VOICE OUTPUT: OFF" : "VOICE OUTPUT: ON";
-    $("sys-voice").textContent = voice.muted ? "MUTED" : "ONLINE";
+    $("btn-mute").textContent = voice.muted ? "Voice output · Off" : "Voice output · On";
+    $("sys-voice").textContent = voice.muted ? "Muted" : "Online";
   });
 
   $("btn-clear").addEventListener("click", () => {
     history = [];
     persistHistory(history);
-    $("transcript").innerHTML = "";
+    $("transcript").querySelectorAll(".msg").forEach((n) => n.remove());
+    const empty = $("empty-state");
+    if (empty) empty.style.display = "";
     stats();
-    addMsg("jarvis", "Session purged, sir. Memory banks of this conversation are clear. Persistent notes remain.", "SYSTEM");
+    addMsg("jarvis", "Session purged, sir. Memory banks of this conversation are clear. Persistent notes remain.", "System");
   });
 
   $("btn-settings").addEventListener("click", openSettings);
@@ -223,8 +254,8 @@ function bindUi() {
     voice.speak(`Protocol updated. I shall address you as ${cfg.title}.`);
   });
 
-  $("sys-voice").textContent = "ONLINE";
-  $("sys-mic").textContent = voice.canListen ? "ARMED" : "UNAVAILABLE";
+  $("sys-voice").textContent = "Online";
+  $("sys-mic").textContent = voice.canListen ? "Armed" : "Unavailable";
 }
 
 function openSettings() {
