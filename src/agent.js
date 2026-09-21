@@ -168,5 +168,5 @@ export function greeting(cfg) {
   const hour = new Date().getHours();
   const part = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const t = cfg.title || "sir";
-  return `${part}, ${t}. All systems are operational. Token limiter disabled — you may speak at any length. How may I assist you?`;
+  return `${part}, ${t}. Voice control only. Tap the core, then tell me what to do in this browser.`;
 }

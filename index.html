@@ -6,271 +6,72 @@
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1"
     />
-    <meta name="theme-color" content="#07050a" />
+    <meta name="theme-color" content="#020308" />
     <meta name="color-scheme" content="dark" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="JARVIS" />
-    <meta
-      name="description"
-      content="J.A.R.V.I.S. unlimited-token agent. Chrome, Edge, Firefox, Safari, Opera, and mobile."
-    />
-    <title>J.A.R.V.I.S. · Private Atelier</title>
+    <title>J.A.R.V.I.S. · Voice Control</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Outfit:wght@300;400;500;600&family=Share+Tech+Mono&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <div class="vignette" aria-hidden="true"></div>
-    <div class="gold-wash" aria-hidden="true"></div>
-    <div id="cursor-glow" aria-hidden="true"></div>
-    <div id="noise"></div>
     <canvas id="hud-canvas"></canvas>
-
-    <div class="ornament-frame" aria-hidden="true">
-      <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
-      <span class="edge top"></span><span class="edge bottom"></span>
-    </div>
+    <div class="vignette" aria-hidden="true"></div>
 
     <div id="boot">
-      <div class="boot-seal">
-        <div class="boot-reactor" aria-hidden="true">
-          <div class="ring r1"></div>
-          <div class="ring r2"></div>
-          <div class="ring r3"></div>
-          <div class="ring r4"></div>
-          <div class="core"></div>
-        </div>
+      <div class="boot-reactor">
+        <div class="ring r1"></div>
+        <div class="ring r2"></div>
+        <div class="core"></div>
       </div>
-      <div class="boot-kicker">Stark Private Suite · By Appointment</div>
       <div class="boot-wordmark">J.A.R.V.I.S.</div>
-      <div class="boot-rule"></div>
-      <div class="boot-sub">Just A Rather Very Intelligent System</div>
+      <div class="boot-sub">Voice control · Browser command</div>
       <pre id="boot-log" class="boot-log"></pre>
       <div class="boot-bar"><div id="boot-fill"></div></div>
       <div id="boot-pct">00%</div>
     </div>
 
-    <div id="browser-bar" class="browser-bar hidden" hidden>
-      <span id="browser-bar-copy">For voice, open the atelier in its own browser tab.</span>
-      <a id="btn-full-browser" class="browser-bar-link" href="/" target="_blank" rel="noopener">Open in browser</a>
-    </div>
-
-    <noscript>
-      <div class="browser-bar">
-        J.A.R.V.I.S. needs JavaScript. Enable it in Chrome, Edge, Firefox, Safari, or Opera.
-      </div>
-    </noscript>
-
     <div id="app" class="hidden" hidden>
-      <header class="masthead">
-        <div class="brand">
-          <div class="mini-reactor" id="mini-reactor"><span></span></div>
-          <div>
-            <div class="brand-kicker">House Intelligence</div>
-            <div class="brand-name">J.A.R.V.I.S.</div>
-            <div class="brand-sub">Mark VII · Private Atelier</div>
-          </div>
-        </div>
-
-        <div class="mast-center">
-          <div class="status-cluster">
-            <div class="chip ok"><i></i><span>Systems nominal</span></div>
-            <div class="chip gold" title="Token limiter disabled">
-              <i></i><span>∞ Unlimited tokens</span>
-            </div>
-            <div class="chip" id="link-chip">
-              <i></i><span id="link-label">Neural link · Standby</span>
-            </div>
-            <div class="chip" id="browser-chip">
-              <i></i><span id="browser-label">Browser</span>
-            </div>
-          </div>
-          <div class="waveform" id="waveform" aria-hidden="true">
-            <b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b>
-          </div>
-        </div>
-
-        <div class="clock-block">
-          <div class="clock-kicker">Local meridian</div>
-          <div id="clock">00:00:00</div>
-          <div id="date-line">Initialising</div>
-        </div>
+      <header class="rail">
+        <div class="rail-brand">J.A.R.V.I.S.</div>
+        <div class="rail-mode" id="mode-pill">VOICE ONLY</div>
+        <div class="rail-status" id="status-pill">STANDBY</div>
+        <div class="rail-clock" id="clock">00:00:00</div>
       </header>
 
-      <main class="atelier">
-        <aside class="cabinet left-panel">
-          <div class="cabinet-plate">
-            <div class="crest">
-              <svg viewBox="0 0 64 64" width="42" height="42" aria-hidden="true">
-                <circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" stroke-width="1.2" />
-                <circle cx="32" cy="32" r="21" fill="none" stroke="currentColor" stroke-width="0.6" opacity="0.5" />
-                <path d="M32 10 L36 26 L52 26 L39 36 L44 52 L32 42 L20 52 L25 36 L12 26 L28 26 Z" fill="currentColor" opacity="0.85" />
-              </svg>
-              <div>
-                <em>Stark Industries</em>
-                <strong>Private suite</strong>
-              </div>
-            </div>
-          </div>
-
-          <h2><span>Subsystems</span></h2>
-          <ul class="sys-list" id="sys-list">
-            <li><span>Voice matrix</span><b id="sys-voice">Standby</b></li>
-            <li><span>Auditory input</span><b id="sys-mic">Idle</b></li>
-            <li><span>Neural core</span><b id="sys-core">Local</b></li>
-            <li><span>Memory banks</span><b>Unbounded</b></li>
-            <li><span>Token limiter</span><b class="gold">Disabled</b></li>
-            <li><span>Protocol</span><b>Jarvis v7</b></li>
-          </ul>
-
-          <h2><span>Telemetry</span></h2>
-          <div class="meters">
-            <div class="meter">
-              <label>Core load</label>
-              <div class="bar"><i id="m-cpu"></i></div>
-            </div>
-            <div class="meter">
-              <label>Voice amplitude</label>
-              <div class="bar"><i id="m-voice"></i></div>
-            </div>
-            <div class="meter">
-              <label>Context silk</label>
-              <div class="bar gold"><i id="m-ctx"></i></div>
-            </div>
-          </div>
-
-          <h2><span>Atelier directives</span></h2>
-          <div class="quick" id="quick">
-            <button data-q="Status report.">Status report</button>
-            <button data-q="What time is it?">The hour</button>
-            <button data-q="Tell me a joke, Jarvis.">Wit protocol</button>
-            <button data-q="Who are you?">Identity</button>
-            <button data-q="What can you do?">Capabilities</button>
-            <button data-q="Give me a briefing on quantum computing.">Evening briefing</button>
-          </div>
-        </aside>
-
-        <section class="salon">
-          <div class="salon-head">
-            <div class="hanging-reactor" aria-hidden="true">
-              <i></i>
-            </div>
-            <div class="salon-copy">
-              <div class="salon-kicker">Conversation · Unbounded</div>
-              <h1>The salon</h1>
-            </div>
-            <div class="salon-rule"></div>
-          </div>
-
-          <div class="stage-frame">
-            <div class="corners"></div>
-            <div id="transcript" class="transcript" aria-live="polite">
-              <div id="empty-state" class="empty-state">
-                <div class="empty-diamond"></div>
-                <p class="empty-lead">At your service</p>
-                <p class="empty-sub">Speak, or write as long as you wish. The token limiter has been retired for the evening.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="composer">
-            <button id="btn-mic" class="orb" title="Address him aloud" aria-label="Speak">
-              <span class="orb-ring"></span>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="9" y="3" width="6" height="11" rx="3" />
-                <path d="M5 11a7 7 0 0 0 14 0" />
-                <path d="M12 18v3" />
-              </svg>
-            </button>
-            <div class="input-wrap">
-              <textarea
-                id="input"
-                rows="1"
-                placeholder="Address J.A.R.V.I.S. — the evening is unmetered, sir."
-                autocomplete="off"
-                spellcheck="true"
-                enterkeyhint="send"
-                inputmode="text"
-                autocapitalize="sentences"
-              ></textarea>
-              <div class="input-meta">
-                <span id="char-count">0 · unrestricted</span>
-                <span>Enter to send · Shift+Enter for a new line</span>
-              </div>
-            </div>
-            <button id="btn-send" class="send" aria-label="Send">
-              <span>Engage</span>
-            </button>
-          </div>
-        </section>
-
-        <aside class="cabinet right-panel">
-          <h2><span>House memory</span></h2>
-          <div id="memory-view" class="memory-view">No persistent notes yet, sir.</div>
-
-          <h2><span>Session ledger</span></h2>
-          <ul class="sys-list ledger">
-            <li><span>Turns</span><b id="stat-turns">0</b></li>
-            <li><span>Spoken replies</span><b id="stat-spoken">0</b></li>
-            <li><span>Context silk</span><b id="stat-chars">0</b></li>
-            <li><span>Token cap</span><b class="gold">∞</b></li>
-          </ul>
-
-          <div class="side-actions">
-            <button id="btn-mute" class="ghost">Voice output · On</button>
-            <button id="btn-clear" class="ghost">Purge session</button>
-            <button id="btn-settings" class="ghost gold">Neural link</button>
-          </div>
-
-          <div class="colophon">
-            Unlimited token core<br />Encrypted to this atelier
-          </div>
-        </aside>
-      </main>
-    </div>
-
-    <div id="settings" class="modal hidden" hidden>
-      <div class="modal-card">
-        <div class="modal-ornament"></div>
-        <div class="modal-head">
-          <div>
-            <div class="salon-kicker">Protocol</div>
-            <h3>Neural link</h3>
-          </div>
-          <button id="btn-close-settings" class="ghost">Close</button>
-        </div>
-        <p class="hint">
-          The local core remains unbounded — no meter, no cut-off. Attach a cloud model from this browser
-          if you would like broader reasoning. Keys never leave this atelier.
-        </p>
-        <label>Preferred engine</label>
-        <select id="cfg-engine">
-          <option value="auto">Auto · cloud, then local core</option>
-          <option value="cloud">Cloud neural link</option>
-          <option value="openai">Custom OpenAI-compatible API</option>
-          <option value="local">Local core only</option>
-        </select>
-        <label>How you wish to be addressed</label>
-        <input id="cfg-title" type="text" placeholder="sir" maxlength="40" />
-        <label>API base URL</label>
-        <input id="cfg-base" type="url" placeholder="https://api.groq.com/openai/v1" />
-        <label>API key</label>
-        <input id="cfg-key" type="password" placeholder="sk-…" autocomplete="off" />
-        <label>Model name</label>
-        <input id="cfg-model" type="text" placeholder="openai · gpt-4o-mini · llama-3.3-70b" />
-        <div class="modal-actions">
-          <button id="btn-save-settings" class="send"><span>Save protocol</span></button>
-        </div>
+      <div id="browser-bar" class="browser-bar hidden" hidden>
+        <span id="browser-bar-copy">Voice needs a full browser tab.</span>
+        <a id="btn-full-browser" class="browser-bar-link" href="/" target="_blank" rel="noopener">Open in browser</a>
       </div>
+
+      <main class="arena">
+        <button id="core" class="core-btn" type="button" aria-label="Start listening">
+          <span class="core-rings"></span>
+          <span class="core-gem"></span>
+        </button>
+        <p class="hint" id="arm-hint">Tap the core to authorise voice. Then just speak.</p>
+        <p class="heard" id="heard"></p>
+        <p class="reply" id="reply"></p>
+      </main>
+
+      <section id="dock" class="dock" hidden>
+        <div class="dock-bar">
+          <span id="dock-title">VIEW</span>
+          <span id="dock-url"></span>
+          <button id="btn-close-dock" type="button">Close</button>
+        </div>
+        <iframe id="web" title="Browser view" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"></iframe>
+        <video id="cam" playsinline autoplay muted hidden></video>
+        <div id="dock-card" class="dock-card" hidden></div>
+      </section>
     </div>
 
     <script type="module" src="/src/main.js"></script>

@@ -13,45 +13,13 @@ export function startHud(canvas) {
   resize();
   window.addEventListener("resize", resize);
 
-  const dust = Array.from({ length: 90 }, () => ({
+  const dust = Array.from({ length: 80 }, () => ({
     x: Math.random() * innerWidth,
     y: Math.random() * innerHeight,
-    r: Math.random() * 1.6 + 0.2,
-    v: Math.random() * 0.18 + 0.03,
+    r: Math.random() * 1.4 + 0.2,
+    v: Math.random() * 0.22 + 0.04,
     a: Math.random() * Math.PI * 2,
-    g: Math.random() > 0.7,
   }));
-
-  function drawDiamondGrid() {
-    const step = 72;
-    ctx.save();
-    ctx.strokeStyle = "rgba(201,164,92,0.045)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for (let x = -innerHeight; x < innerWidth + innerHeight; x += step) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x + innerHeight, innerHeight);
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x - innerHeight, innerHeight);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawDust() {
-    for (const p of dust) {
-      p.y -= p.v;
-      p.x += Math.sin(p.a + state.t * 0.0007) * 0.12;
-      if (p.y < -6) {
-        p.y = innerHeight + 6;
-        p.x = Math.random() * innerWidth;
-      }
-      ctx.fillStyle = p.g ? `rgba(232,213,163,${0.28 + state.amp * 0.3})` : `rgba(143,217,228,${0.12 + state.amp * 0.2})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
 
   function ring(x, y, radius, rot, dash, color) {
     ctx.save();
@@ -66,58 +34,49 @@ export function startHud(canvas) {
     ctx.restore();
   }
 
-  function ticks(x, y, radius, count, rot) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rot);
-    ctx.strokeStyle = "rgba(201,164,92,0.28)";
-    for (let i = 0; i < count; i++) {
-      const a = (i / count) * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(a) * radius, Math.sin(a) * radius);
-      ctx.lineTo(Math.cos(a) * (radius + 6), Math.sin(a) * (radius + 6));
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
   function tick(now) {
     state.t = now;
-    state.amp += (state.targetAmp - state.amp) * 0.06;
+    state.amp += (state.targetAmp - state.amp) * 0.08;
     ctx.clearRect(0, 0, innerWidth, innerHeight);
 
     const g = ctx.createRadialGradient(
-      innerWidth * 0.5,
-      innerHeight * 0.18,
+      innerWidth / 2,
+      innerHeight / 2,
       20,
-      innerWidth * 0.5,
-      innerHeight * 0.4,
-      innerWidth * 0.65
+      innerWidth / 2,
+      innerHeight / 2,
+      innerWidth * 0.55
     );
-    g.addColorStop(0, "rgba(201,164,92,0.08)");
-    g.addColorStop(0.45, "rgba(40,20,24,0.12)");
-    g.addColorStop(1, "rgba(7,5,10,0)");
+    g.addColorStop(0, `rgba(92,225,255,${0.05 + state.amp * 0.08})`);
+    g.addColorStop(1, "rgba(2,3,8,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, innerWidth, innerHeight);
 
-    drawDiamondGrid();
-    drawDust();
-
-    const cx = innerWidth * 0.5;
-    const cy = 86;
-    const glow = 0.14 + state.amp * 0.35;
-    ring(cx, cy, 34 + state.amp * 8, now / 4000, [2, 8], `rgba(201,164,92,${glow})`);
-    ring(cx, cy, 48, -now / 5200, [12, 10], `rgba(143,217,228,${0.12 + state.amp * 0.2})`);
-    ticks(cx, cy, 58, 24, now / 18000);
-
-    const bx = innerWidth - 86;
-    const by = innerHeight - 86;
-    ring(bx, by, 22 + state.amp * 6, now / 1800, [4, 6], `rgba(201,164,92,${0.22 + state.amp * 0.3})`);
-    ring(bx, by, 34, -now / 2600, [10, 8], `rgba(232,213,163,0.18)`);
-    ctx.fillStyle = `rgba(232,213,163,${0.45 + state.amp * 0.4})`;
+    ctx.strokeStyle = "rgba(92,225,255,0.04)";
     ctx.beginPath();
-    ctx.arc(bx, by, 3.5 + state.amp * 2, 0, Math.PI * 2);
-    ctx.fill();
+    for (let x = 0; x < innerWidth; x += 56) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, innerHeight);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(92,225,255,0.45)";
+    for (const p of dust) {
+      p.y -= p.v;
+      p.x += Math.sin(p.a + now * 0.0008) * 0.12;
+      if (p.y < 0) {
+        p.y = innerHeight;
+        p.x = Math.random() * innerWidth;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const cx = innerWidth / 2;
+    const cy = innerHeight / 2;
+    ring(cx, cy, 130 + state.amp * 18, now / 3000, [4, 10], `rgba(92,225,255,${0.12 + state.amp * 0.25})`);
+    ring(cx, cy, 168, -now / 4000, [16, 12], `rgba(224,178,90,${0.12 + state.amp * 0.2})`);
 
     requestAnimationFrame(tick);
   }

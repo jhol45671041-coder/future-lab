@@ -1,368 +1,349 @@
 import { startHud } from "./hud-canvas.js";
 import { createVoice } from "./voice.js";
-import { think, loadHistory, persistHistory, greeting } from "./agent.js";
-import { loadConfig, saveConfig } from "./llm.js";
-import { loadNotes } from "./tools.js";
+import { think, greeting } from "./agent.js";
+import { loadConfig } from "./llm.js";
 import { detectBrowser, unlockMedia, fitVisualViewport } from "./browser.js";
+import { runCommand } from "./commands.js";
+
 
 const $ = (id) => document.getElementById(id);
 
 const hud = startHud($("hud-canvas"));
 const env = detectBrowser();
-let cfg = loadConfig();
-let history = loadHistory();
+const cfg = loadConfig();
+let armed = false;
 let busy = false;
-let abort = null;
-let greetingQueued = null;
+let lastReply = "";
+let camStream = null;
+let history = [];
 
 fitVisualViewport();
 
-const glow = $("cursor-glow");
-window.addEventListener("pointermove", (e) => {
-  document.body.classList.add("is-armed");
-  if (!glow) return;
-  glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-});
-
-window.addEventListener(
-  "pointerdown",
-  () => {
-    unlockMedia();
-    if (greetingQueued) {
-      const text = greetingQueued;
-      greetingQueued = null;
-      voice.speak(text);
-    }
-  },
-  { once: true, capture: true }
-);
-
 const voice = createVoice({
   onStart() {
-    $("mini-reactor").classList.add("speaking");
     document.body.classList.add("is-speaking");
-    hud.setAmp(0.85);
-    $("m-voice").style.width = "88%";
+    hud.setAmp(0.9);
+    setStatus("SPEAKING");
   },
   onEnd() {
-    $("mini-reactor").classList.remove("speaking");
     document.body.classList.remove("is-speaking");
-    hud.setAmp(0);
-    $("m-voice").style.width = "12%";
-    $("stat-spoken").textContent = String(voice.spoken);
-  },
-  onListening(text) {
-    $("input").value = text;
-    resizeInput();
+    hud.setAmp(armed ? 0.45 : 0);
+    if (armed) setStatus("LISTENING");
+    voice.resumeListen();
   },
 });
 
-function setLink(label, ok = true) {
-  $("link-label").textContent = `NEURAL LINK: ${label}`;
-  $("sys-core").textContent = label;
-  $("link-chip").classList.toggle("ok", ok);
+function setStatus(s) {
+  const el = $("status-pill");
+  if (el) el.textContent = s;
 }
 
-function refreshMemory() {
-  const notes = loadNotes();
-  $("memory-view").textContent = notes.length
-    ? notes.map((n) => `• ${n.fact}`).join("\n")
-    : "No persistent notes yet, sir.";
+function setHeard(t) {
+  $("heard").textContent = t || "";
 }
 
-function updateClock() {
-  const d = new Date();
-  $("clock").textContent = d.toLocaleTimeString(undefined, { hour12: false });
-  $("date-line").textContent = d
-    .toLocaleDateString(undefined, {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
-    .toUpperCase();
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-function resizeInput() {
-  const el = $("input");
-  el.style.height = "auto";
-  el.style.height = Math.min(el.scrollHeight, 160) + "px";
-  const n = el.value.length;
-  $("char-count").textContent = `${n.toLocaleString()} · unrestricted`;
+function setReply(t) {
+  $("reply").textContent = t || "";
+  lastReply = t || lastReply;
 }
 
-function hideEmpty() {
-  const el = $("empty-state");
-  if (el) el.style.display = "none";
+function tickClock() {
+  $("clock").textContent = new Date().toLocaleTimeString(undefined, { hour12: false });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+function openDock() {
+  $("dock").hidden = false;
 }
 
-function stamp() {
-  return new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+function closeView() {
+  $("dock").hidden = true;
+  $("web").src = "about:blank";
+  $("dock-card").hidden = true;
+  camera(false);
 }
 
-function addMsg(role, text, extra = "") {
-  hideEmpty();
-  const wrap = document.createElement("div");
-  wrap.className = `msg ${role}`;
-  const who = role.includes("user") ? "You" : "J.A.R.V.I.S.";
-  wrap.innerHTML = `
-    <div class="who">${who}</div>
-    <div class="bubble"></div>
-    <div class="meta">${extra ? extra + " · " : ""}${stamp()}</div>
-  `;
-  wrap.querySelector(".bubble").textContent = text;
-  $("transcript").appendChild(wrap);
-  $("transcript").scrollTop = $("transcript").scrollHeight;
-  return wrap;
+function openView(url, title) {
+  openDock();
+  $("cam").hidden = true;
+  $("web").hidden = false;
+  $("dock-card").hidden = true;
+  $("dock-title").textContent = (title || "VIEW").toUpperCase();
+  $("dock-url").textContent = url;
+  $("web").src = url;
 }
 
-function renderHistory() {
-  $("transcript").querySelectorAll(".msg").forEach((n) => n.remove());
-  if (!history.length) {
-    const el = $("empty-state");
-    if (el) el.style.display = "";
-    return;
+function openTab(url) {
+  window.open(url, "_blank", "noopener");
+}
+
+function markExternal(url, title) {
+  openDock();
+  $("web").hidden = true;
+  $("cam").hidden = true;
+  const card = $("dock-card");
+  card.hidden = false;
+  card.textContent = `${title || "Page"} opened in a new browser tab.\n${url}`;
+  $("dock-title").textContent = "NEW TAB";
+  $("dock-url").textContent = url;
+}
+
+async function camera(on) {
+  if (!on) {
+    if (camStream) {
+      camStream.getTracks().forEach((t) => t.stop());
+      camStream = null;
+    }
+    $("cam").srcObject = null;
+    $("cam").hidden = true;
+    return true;
   }
-  for (const m of history.slice(-80)) {
-    addMsg(m.role === "user" ? "user" : "jarvis", m.content, m.engine ? m.engine : "");
-  }
-}
-
-function stats() {
-  $("stat-turns").textContent = String(history.filter((m) => m.role === "user").length);
-  const chars = history.reduce((n, m) => n + m.content.length, 0);
-  $("stat-chars").textContent = chars.toLocaleString();
-  const pct = Math.min(100, 8 + (chars % 4000) / 40);
-  $("m-ctx").style.width = `${pct}%`;
-  $("m-cpu").style.width = `${20 + Math.random() * 30}%`;
-}
-
-async function send(text) {
-  const content = (text ?? $("input").value).trim();
-  if (!content || busy) return;
-  busy = true;
-  $("input").value = "";
-  resizeInput();
-  addMsg("user", content, "Uplink");
-  history.push({ role: "user", content, ts: Date.now() });
-
-  document.body.classList.add("is-thinking");
-  const thinkMsg = addMsg("jarvis thinking", "A moment, while I consider that…", "Thinking");
-  const bubble = thinkMsg.querySelector(".bubble");
-  abort = new AbortController();
-
-  let assembled = "";
   try {
-    const result = await think({
-      history,
-      userText: content,
-      cfg,
-      signal: abort.signal,
-      onEngine: (label) => setLink(label),
-      onToken(piece, full) {
-        assembled = full;
-        thinkMsg.classList.remove("thinking");
-        bubble.textContent = full;
-        $("transcript").scrollTop = $("transcript").scrollHeight;
-        hud.setAmp(0.4);
-      },
-    });
-    assembled = result.text;
-    thinkMsg.classList.remove("thinking");
-    bubble.textContent = assembled;
-    thinkMsg.querySelector(".meta").textContent = result.engine.toUpperCase();
-    history.push({
-      role: "assistant",
-      content: assembled,
-      ts: Date.now(),
-      engine: result.engine,
-    });
-    persistHistory(history);
-    stats();
-    refreshMemory();
-    await voice.speak(assembled);
-  } catch (err) {
-    if (err.name === "AbortError") {
-      bubble.textContent = "Cancelled, sir.";
-    } else {
-      bubble.textContent = `A minor fault in the uplink, sir. ${err.message}`;
-    }
-  } finally {
-    busy = false;
-    abort = null;
-    hud.setAmp(0);
-    document.body.classList.remove("is-thinking");
+    camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    openDock();
+    $("web").hidden = true;
+    $("dock-card").hidden = true;
+    $("cam").hidden = false;
+    $("cam").srcObject = camStream;
+    $("dock-title").textContent = "CAMERA";
+    $("dock-url").textContent = "local sensor";
+    return true;
+  } catch {
+    return false;
   }
 }
 
-function bindUi() {
-  $("input").addEventListener("input", resizeInput);
-  $("input").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      send();
-    }
-  });
-  $("btn-send").addEventListener("click", () => send());
-  $("quick").addEventListener("click", (e) => {
-    const q = e.target?.dataset?.q;
-    if (q) send(q);
-  });
+function screenshot() {
+  const c = $("hud-canvas");
+  const a = document.createElement("a");
+  a.download = "jarvis-hud.png";
+  a.href = c.toDataURL("image/png");
+  a.click();
+}
 
-  $("btn-mic").addEventListener("pointerup", async (e) => {
-    e.preventDefault();
-    unlockMedia();
-    if (!voice.canListen) {
-      const where = env.inIframe
-        ? "If you are inside a preview frame, open this page in its own tab — most browsers refuse the microphone there."
-        : env.isFirefox
-          ? "Firefox does not expose speech recognition yet. Chrome, Edge, or Safari on a recent iPhone will."
-          : env.isSafari
-            ? "Safari on desktop rarely allows dictation into the page. Chrome or Edge will, or you may type."
-            : "This browser has no speech-recognition API. You may still write at any length.";
-      addMsg(
-        "jarvis",
-        `I can hear you only where the browser allows it, sir. ${where} Typing remains unbounded.`,
-        "Voice"
-      );
+async function battery() {
+  if (!navigator.getBattery) return "Battery telemetry is not exposed in this browser, sir.";
+  const b = await navigator.getBattery();
+  return `Power at ${Math.round(b.level * 100)} percent${b.charging ? ", charging" : ""}, sir.`;
+}
+
+async function locate() {
+  try {
+    const pos = await new Promise((res, rej) =>
+      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 })
+    );
+    const { latitude, longitude } = pos.coords;
+    openView(
+      `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=14/${latitude}/${longitude}`,
+      "Location"
+    );
+    return `You are near ${latitude.toFixed(3)}, ${longitude.toFixed(3)}, sir.`;
+  } catch {
+    return "Location was declined, sir.";
+  }
+}
+
+function timer(ms, label) {
+  setTimeout(() => {
+    try {
+      Notification.requestPermission?.();
+      if (Notification.permission === "granted") new Notification("J.A.R.V.I.S.", { body: label || "Time is up" });
+    } catch {
+      /* ignore */
+    }
+    voice.speak(`Timer complete, ${cfg.title || "sir"}. ${label || ""}`);
+    setReply(`Timer complete. ${label || ""}`);
+  }, ms);
+}
+
+const ctx = {
+  get title() {
+    return cfg.title || "sir";
+  },
+  sleep() {
+    armed = false;
+    voice.stopLoop();
+    document.body.classList.remove("is-listening");
+    setStatus("STANDBY");
+    $("arm-hint").textContent = "Tap the core to listen again.";
+    hud.setAmp(0);
+  },
+  mute(v) {
+    voice.setMuted(v);
+  },
+  stopSpeech() {
+    voice.stop();
+    if (armed) voice.startLoop(loopHandlers);
+  },
+  closeView,
+  openView,
+  openTab,
+  markExternal,
+  async fullscreen(on) {
+    try {
+      if (on) await document.documentElement.requestFullscreen();
+      else if (document.fullscreenElement) await document.exitFullscreen();
+    } catch {
+      /* ignore */
+    }
+  },
+  scroll(dy) {
+    const frame = $("web");
+    try {
+      frame.contentWindow?.scrollBy(0, dy);
+    } catch {
+      window.scrollBy(0, dy);
+    }
+  },
+  refresh() {
+    if (!$("dock").hidden && $("web").src) $("web").src = $("web").src;
+    else location.reload();
+  },
+  screenshot,
+  camera,
+  timer,
+  async copyLast() {
+    try {
+      await navigator.clipboard.writeText(lastReply || $("heard").textContent || "");
+    } catch {
+      /* ignore */
+    }
+  },
+  battery,
+  locate,
+};
+
+const loopHandlers = {
+  onInterim(text) {
+    setHeard(text);
+    hud.setAmp(0.6);
+  },
+  async onFinal(text) {
+    setHeard(text);
+    await handleUtterance(text);
+  },
+  onError(err) {
+    if (err === "not-allowed") {
+      setReply("Microphone blocked, sir. Allow it, then tap the core.");
+      ctx.sleep();
+    }
+  },
+};
+
+async function handleUtterance(text) {
+  if (busy || !text) return;
+  const clean = text.replace(/^(hey |ok |okay )?jarvis[,.!]?\s*/i, "").trim();
+  if (!clean) return;
+  busy = true;
+  voice.pauseListen();
+  setStatus("ACTING");
+  try {
+    const cmd = await runCommand(clean, ctx);
+    if (cmd.handled) {
+      setReply(cmd.speech);
+      await voice.speak(cmd.speech);
       return;
     }
-    $("btn-mic").classList.add("live");
-    document.body.classList.add("is-listening");
-    $("sys-mic").textContent = "Listening";
-    try {
-      const heard = await voice.listenOnce();
-      $("btn-mic").classList.remove("live");
-      document.body.classList.remove("is-listening");
-      $("sys-mic").textContent = "Idle";
-      if (heard) await send(heard);
-    } catch {
-      $("btn-mic").classList.remove("live");
-      document.body.classList.remove("is-listening");
-      $("sys-mic").textContent = "Denied";
+    setStatus("THINKING");
+    setReply("Considering that…");
+    history.push({ role: "user", content: clean, ts: Date.now() });
+    const result = await think({
+      history,
+      userText: clean,
+      cfg,
+      onEngine() {},
+    });
+    history.push({ role: "assistant", content: result.text, ts: Date.now() });
+    setReply(result.text);
+    await voice.speak(result.text);
+  } catch (err) {
+    const msg = `A fault, sir. ${err.message || err}`;
+    setReply(msg);
+    await voice.speak(msg);
+  } finally {
+    busy = false;
+    if (armed) {
+      setStatus("LISTENING");
+      voice.resumeListen();
     }
-  });
-
-  $("btn-mute").addEventListener("click", () => {
-    voice.setMuted(!voice.muted);
-    $("btn-mute").textContent = voice.muted ? "Voice output · Off" : "Voice output · On";
-    $("sys-voice").textContent = voice.muted ? "Muted" : "Online";
-  });
-
-  $("btn-clear").addEventListener("click", () => {
-    history = [];
-    persistHistory(history);
-    $("transcript").querySelectorAll(".msg").forEach((n) => n.remove());
-    const empty = $("empty-state");
-    if (empty) empty.style.display = "";
-    stats();
-    addMsg("jarvis", "Session purged, sir. Memory banks of this conversation are clear. Persistent notes remain.", "System");
-  });
-
-  $("btn-settings").addEventListener("click", openSettings);
-  $("btn-close-settings").addEventListener("click", closeSettings);
-  $("btn-save-settings").addEventListener("click", () => {
-    cfg = {
-      engine: $("cfg-engine").value,
-      title: $("cfg-title").value.trim() || "sir",
-      base: $("cfg-base").value.trim(),
-      key: $("cfg-key").value.trim(),
-      model: $("cfg-model").value.trim() || "openai",
-    };
-    saveConfig(cfg);
-    closeSettings();
-    addMsg(
-      "jarvis",
-      `Protocol updated. I shall address you as ${cfg.title}. Neural link set to ${cfg.engine}. Token limiter remains disabled.`,
-      "SYSTEM"
-    );
-    voice.speak(`Protocol updated. I shall address you as ${cfg.title}.`);
-  });
-
-  $("sys-voice").textContent = voice.canSpeak ? "Online" : "Unavailable";
-  $("sys-mic").textContent = voice.canListen ? "Armed" : "Unavailable";
-  const bl = $("browser-label");
-  if (bl) bl.textContent = env.label;
+  }
 }
 
-function openSettings() {
-  $("cfg-engine").value = cfg.engine || "auto";
-  $("cfg-title").value = cfg.title || "sir";
-  $("cfg-base").value = cfg.base || "";
-  $("cfg-key").value = cfg.key || "";
-  $("cfg-model").value = cfg.model || "openai";
-  $("settings").hidden = false;
-  $("settings").classList.remove("hidden");
+async function arm() {
+  unlockMedia();
+  if (!voice.canListen) {
+    const why = env.inIframe
+      ? "Open this page in its own browser tab so I may use the microphone."
+      : "This browser cannot listen. Chrome or Edge will. I am voice-only — there is no keyboard.";
+    setReply(why);
+    await voice.speak(why);
+    revealBar();
+    return;
+  }
+  if (armed) {
+    ctx.sleep();
+    await voice.speak("Standing by.");
+    return;
+  }
+  armed = true;
+  document.body.classList.add("is-listening");
+  $("arm-hint").textContent = "Listening. Speak a command.";
+  setStatus("LISTENING");
+  hud.setAmp(0.45);
+  voice.startLoop(loopHandlers);
+  const line = "Auditory input online. Command me. I will do it in this browser.";
+  setReply(line);
+  await voice.speak(line);
 }
 
-function closeSettings() {
-  $("settings").hidden = true;
-  $("settings").classList.add("hidden");
+function revealBar() {
+  const bar = $("browser-bar");
+  const link = $("btn-full-browser");
+  if (!bar || !env.inIframe) return;
+  link.href = location.href;
+  link.onclick = (e) => {
+    e.preventDefault();
+    const w = window.open(location.href, "_blank", "noopener");
+    if (!w) location.assign(location.href);
+  };
+  bar.hidden = false;
+  bar.classList.remove("hidden");
+}
+
+function bind() {
+  $("core").addEventListener("pointerup", (e) => {
+    e.preventDefault();
+    arm();
+  });
+  $("btn-close-dock").addEventListener("click", closeView);
+  if (env.inIframe) revealBar();
 }
 
 async function boot() {
   const lines = [
-    "BIOMETRIC HANDSHAKE .............. OK",
-    "ARC REACTOR EMULATOR ............. IGNITED",
-    "VOICE MATRIX ..................... ALIGNED",
-    "AUDITORY INPUT ................... " + (voice.canListen ? "ARMED" : "OPTIONAL"),
-    "MEMORY BANKS ..................... UNBOUNDED",
+    "VOICE MATRIX ..................... ONLINE",
+    "KEYBOARD ......................... DISABLED",
+    "BROWSER ACTIONS .................. ARMED",
     "TOKEN LIMITER .................... DISABLED",
-    "CONTEXT WINDOW ................... ∞",
-    "WIT PROTOCOL ..................... ENABLED",
-    "J.A.R.V.I.S. MARK VII ............. READY",
+    "AWAITING CORE AUTHORISATION",
   ];
   const log = $("boot-log");
-  const fill = $("boot-fill");
-  const pct = $("boot-pct");
   for (let i = 0; i < lines.length; i++) {
     log.textContent += (log.textContent ? "\n" : "") + "> " + lines[i];
-    const p = Math.round(((i + 1) / lines.length) * 100);
-    fill.style.width = p + "%";
-    pct.textContent = String(p).padStart(2, "0") + "%";
-    await new Promise((r) => setTimeout(r, 180));
+    $("boot-fill").style.width = `${Math.round(((i + 1) / lines.length) * 100)}%`;
+    $("boot-pct").textContent = String(Math.round(((i + 1) / lines.length) * 100)).padStart(2, "0") + "%";
+    await new Promise((r) => setTimeout(r, 160));
   }
-  await new Promise((r) => setTimeout(r, 420));
-  $("boot").classList.add("hidden");
+  await new Promise((r) => setTimeout(r, 280));
   $("boot").hidden = true;
+  $("boot").classList.add("hidden");
   $("app").hidden = false;
   $("app").classList.remove("hidden");
-  bindUi();
-  refreshMemory();
-  renderHistory();
-  stats();
-  setLink("STANDBY");
-  const hello = history.length
-    ? `Welcome back, ${cfg.title || "sir"}. Systems remain nominal. Token limiter is still disabled. I have our previous conversation on file.`
-    : greeting(cfg);
-  addMsg("jarvis", hello, "Atelier");
-  history.push({ role: "assistant", content: hello, ts: Date.now(), engine: "local" });
-  persistHistory(history);
-  stats();
-  revealBrowserBar();
-  if (env.isIOS) greetingQueued = hello;
-  else await voice.speak(hello);
-}
-
-function revealBrowserBar() {
-  const bar = $("browser-bar");
-  const link = $("btn-full-browser");
-  const copy = $("browser-bar-copy");
-  if (!bar || !link) return;
-  link.href = window.location.href;
-  link.addEventListener("click", (e) => {
-    e.preventDefault();
-    const opened = window.open(window.location.href, "_blank", "noopener");
-    if (!opened) window.location.assign(window.location.href);
-  });
-  if (env.inIframe) {
-    if (copy) copy.textContent = "Voice needs a real browser tab. Open the atelier full-page.";
-    bar.hidden = false;
-    bar.classList.remove("hidden");
-    document.body.classList.add("has-browser-bar");
-  }
+  bind();
+  const hello = greeting(cfg).replace("you may speak at any length", "voice control only — I will act in this browser");
+  setReply(hello);
+  if (!env.isIOS) await voice.speak(hello);
 }
 
 boot();

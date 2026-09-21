@@ -66,9 +66,58 @@ export function createVoice({ onStart, onEnd, onListening }) {
   if (Recognition) {
     rec = new Recognition();
     rec.lang = "en-GB";
-    rec.continuous = false;
+    rec.continuous = true;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
+  }
+
+  let looping = false;
+  let paused = false;
+
+  function kick() {
+    if (!looping || paused || !rec) return;
+    try {
+      rec.start();
+    } catch {
+      /* already started */
+    }
+  }
+
+  function startLoop({ onInterim, onFinal, onError }) {
+    if (!rec) throw new Error("no-stt");
+    looping = true;
+    paused = false;
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.onresult = (e) => {
+      let interim = "";
+      let final = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) final += t;
+        else interim += t;
+      }
+      if (final.trim()) onFinal && onFinal(final.trim());
+      else if (interim.trim()) onInterim && onInterim(interim.trim());
+    };
+    rec.onerror = (e) => {
+      if (e.error === "no-speech" || e.error === "aborted") return;
+      onError && onError(e.error);
+    };
+    rec.onend = () => {
+      if (looping && !paused) setTimeout(kick, 160);
+    };
+    kick();
+  }
+
+  function stopLoop() {
+    looping = false;
+    paused = false;
+    try {
+      rec && rec.stop();
+    } catch {
+      /* ignore */
+    }
   }
 
   function speakChunk(text) {
@@ -166,7 +215,22 @@ export function createVoice({ onStart, onEnd, onListening }) {
   return {
     speak,
     listenOnce,
+    startLoop,
+    stopLoop,
+    pauseListen() {
+      paused = true;
+      try {
+        rec && rec.stop();
+      } catch {
+        /* ignore */
+      }
+    },
+    resumeListen() {
+      paused = false;
+      kick();
+    },
     stop() {
+      looping = false;
       if (hasTTS) speechSynthesis.cancel();
       clearInterval(keepAlive);
       try {

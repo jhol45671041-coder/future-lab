@@ -1,53 +1,28 @@
-# J.A.R.V.I.S. — Unlimited Token Core
+# J.A.R.V.I.S. — Voice control
 
-Just A Rather Very Intelligent System. A cinematic, voice-first AI agent that talks like Jarvis: British, dry, loyal — and **not rationed by a token meter**.
+Voice-only agent. No keyboard. He listens, speaks, and acts in the browser.
 
-## What you get
+## Use
 
-- Holographic Iron-Man HUD, boot sequence, and arc reactor
-- Speaks aloud (prefers a British male voice when the browser has one)
-- Push-to-talk listening (Chrome / Edge)
-- **Token limiter disabled** — no cut-off, unbounded session history, compressed long-term memory
-- Local personality core that always works offline
-- Optional cloud neural link (Pollinations or any OpenAI-compatible API) from *your* browser
-- Tools: time, date, calculator, Wikipedia briefings, local weather, persistent notes (“remember that…”)
+1. Open in **Chrome or Edge** (speech recognition).
+2. If you are in a preview iframe, click **Open in browser**.
+3. **Tap the core** once (browsers require a gesture for the microphone).
+4. Speak.
 
-## Run
+## Say things like
 
-```bash
-npm install
-npm run dev
-```
+- Open YouTube
+- Play lo-fi beats
+- Search for Stark Tower
+- Go to github.com
+- Maps to Lahore
+- Open camera
+- Set a timer for 2 minutes
+- Fullscreen
+- Screenshot
+- What’s the weather
+- Who are you
 
-Open the preview, allow microphone + voice if prompted, and address him as you would in the workshop.
+Tap the core again to stand by. Say **stop listening** to sleep.
 
-## Neural link
-
-Open **NEURAL LINK** in the right panel:
-
-| Engine | Behaviour |
-| --- | --- |
-| AUTO | Try cloud, fall back to local core |
-| CLOUD | Public OpenAI-compatible gateway (no key) |
-| CUSTOM API | Your Groq / OpenAI / OpenRouter / Gemini-compatible base URL + key |
-| LOCAL CORE | On-device Jarvis personality + tools only |
-
-Keys are stored in `localStorage` on your machine, never sent to this repo.
-
-## Voice
-
-Chrome’s **Google UK English Male** is the closest built-in stand-in for Paul Bettany. Type if the browser blocks speech recognition — there is still no token cap on text.
-
-## Every browser
-
-Works in **Chrome, Edge, Firefox, Safari, Opera**, and on **iOS / Android**.
-
-| | Talk (TTS) | Listen (mic) | Type |
-| --- | --- | --- | --- |
-| Chrome / Edge | Yes | Yes | Yes |
-| Opera | Yes | Yes | Yes |
-| Safari (macOS) | Yes | Limited | Yes |
-| Safari (iOS) | Yes (after first tap) | Varies | Yes |
-| Firefox | Yes | No (browser limit) | Yes |
-
-If you are in a preview iframe, use **Open in browser** so the microphone is allowed. Add to Home Screen from the manifest on phones.
+Sites that refuse embedding open in a new tab; the rest appear in the lower view.
